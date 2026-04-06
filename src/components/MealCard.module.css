@@ -15,7 +15,7 @@
 .card:focus-visible { border-color: var(--accent); }
 .card.checked {
   background: var(--done-bg);
-  border-color: var(--accent);
+  border-color: var(--border2);
 }
 
 .circle {
@@ -57,7 +57,6 @@
 .macros {
   font-family: 'DM Mono', monospace;
   font-size: 11px;
-  color: var(--accent);
+  color: var(--muted);
   margin-top: 6px;
-  opacity: 0.8;
 }

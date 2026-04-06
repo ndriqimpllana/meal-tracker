@@ -27,11 +27,11 @@
 .btn.active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #000;
+  color: #000000;
 }
 .btn.active .short,
 .btn.active .num,
-.btn.active .dot { color: #000; }
+.btn.active .dot { color: #000000; }
 
 .short {
   font-family: 'DM Mono', monospace;

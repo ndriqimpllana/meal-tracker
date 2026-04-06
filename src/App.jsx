@@ -70,14 +70,17 @@ export default function App() {
         </div>
 
         <div className={styles.mealsList}>
-          {day.meals.map((meal, i) => (
-            <MealCard
-              key={i}
-              meal={meal}
-              checked={!!checked[`${activeDay}-${i}`]}
-              onToggle={() => toggleMeal(activeDay, i)}
-            />
-          ))}
+          {day.meals
+            .map((meal, i) => ({ meal, i }))
+            .filter(({ i }) => !checked[`${activeDay}-${i}`])
+            .map(({ meal, i }) => (
+              <MealCard
+                key={i}
+                meal={meal}
+                checked={false}
+                onToggle={() => toggleMeal(activeDay, i)}
+              />
+            ))}
         </div>
 
         <div className={styles.daySummary}>
