@@ -9,7 +9,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/icon.png",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#93C572"
       },
       "softwareKeyboardLayoutMode": "pan",
       "package": "com.ndricimpllana.mealtracker"
