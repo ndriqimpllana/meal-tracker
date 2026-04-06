@@ -1,0 +1,314 @@
+import { useState } from 'react';
+import {
+  View, Text, TouchableOpacity, StyleSheet,
+  ScrollView, Alert, StatusBar,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { DAYS, TOTAL_MEALS } from './src/data/days';
+import { useStorage } from './src/hooks/useStorage';
+import DayNav from './src/components/DayNav';
+import MealCard from './src/components/MealCard';
+
+export default function App() {
+  const today = new Date().getDay(); // 0=Sun
+  const dayMap = [6, 0, 1, 2, 3, 4, 5];
+  const [activeDay, setActiveDay] = useState(dayMap[today]);
+  const [checked, setChecked] = useStorage('mealChecked', {});
+
+  const toggleMeal = (dayIdx, mealIdx) => {
+    const key = `${dayIdx}-${mealIdx}`;
+    setChecked(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const resetAll = () => {
+    Alert.alert(
+      'Reset Week',
+      'Reset all meal checks for the week?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Reset', style: 'destructive', onPress: () => setChecked({}) },
+      ]
+    );
+  };
+
+  const totalDone = Object.values(checked).filter(Boolean).length;
+  const weekPct = Math.round((totalDone / TOTAL_MEALS) * 100);
+
+  const day = DAYS[activeDay];
+  const dayDone = day.meals.filter((_, i) => checked[`${activeDay}-${i}`]).length;
+  const dayPct = Math.round((dayDone / day.meals.length) * 100);
+
+  return (
+    <View style={s.root}>
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      <SafeAreaView style={s.safe}>
+        <ScrollView style={s.scroll} contentContainerStyle={s.content}>
+
+          {/* ── Header ── */}
+          <View style={s.header}>
+            <View style={s.headerTop}>
+              <View>
+                <Text style={s.appLabel}>Meal Tracker</Text>
+                <Text style={s.title}>Your plan{'\n'}82 kg · recomp</Text>
+              </View>
+              <TouchableOpacity style={s.resetBtn} onPress={resetAll} activeOpacity={0.6}>
+                <Text style={s.resetBtnText}>Reset week</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={s.progressRow}>
+              <View style={s.progressBar}>
+                <View style={[s.progressFill, { width: `${weekPct}%` }]} />
+              </View>
+              <Text style={s.progressText}>{totalDone} / {TOTAL_MEALS} meals</Text>
+            </View>
+          </View>
+
+          {/* ── Day nav ── */}
+          <DayNav days={DAYS} activeDay={activeDay} checkedMap={checked} onSelect={setActiveDay} />
+
+          {/* ── Day header ── */}
+          <View style={s.dayHeader}>
+            <Text style={s.dayName}>{day.name}</Text>
+            <View style={[s.badge, day.type === 'training' ? s.badgeTrain : s.badgeRest]}>
+              <Text style={[s.badgeText, day.type === 'training' ? s.badgeTrainText : s.badgeRestText]}>
+                {day.type === 'training' ? 'TRAINING' : 'REST'}
+              </Text>
+            </View>
+          </View>
+
+          {/* ── Macro strip ── */}
+          <View style={s.macroStrip}>
+            {[
+              { val: String(day.cal), lbl: 'Calories' },
+              { val: `${day.protein}g`, lbl: 'Protein' },
+              { val: `${day.carbs}g`, lbl: 'Carbs' },
+            ].map(({ val, lbl }) => (
+              <View key={lbl} style={s.macroBox}>
+                <Text style={s.macroVal}>{val}</Text>
+                <Text style={s.macroLbl}>{lbl}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* ── Meals list ── */}
+          <View style={s.mealsList}>
+            {day.meals
+              .map((meal, i) => ({ meal, i }))
+              .filter(({ i }) => !checked[`${activeDay}-${i}`])
+              .map(({ meal, i }) => (
+                <MealCard
+                  key={i}
+                  meal={meal}
+                  checked={false}
+                  onToggle={() => toggleMeal(activeDay, i)}
+                />
+              ))}
+          </View>
+
+          {/* ── Day summary ── */}
+          <View style={s.daySummary}>
+            <Text style={s.summaryLabel}>Day progress</Text>
+            <View style={s.summaryBar}>
+              <View style={[s.summaryFill, { width: `${dayPct}%` }]} />
+            </View>
+            <Text style={s.summaryCount}>
+              <Text style={s.bold}>{dayDone}</Text>
+              {' of '}
+              <Text style={s.bold}>{day.meals.length}</Text>
+              {' meals eaten'}
+            </Text>
+          </View>
+
+          {day.note && (
+            <View style={s.noteBox}>
+              <Text style={s.noteText}>{day.note}</Text>
+            </View>
+          )}
+
+        </ScrollView>
+      </SafeAreaView>
+    </View>
+  );
+}
+
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#000000' },
+  safe: { flex: 1, backgroundColor: '#000000' },
+  scroll: { flex: 1 },
+  content: { padding: 16, paddingBottom: 60 },
+
+  // Header
+  header: {
+    paddingTop: 24,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#242424',
+    marginBottom: 20,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  appLabel: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    color: '#666666',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: 6,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#ffffff',
+    lineHeight: 28,
+  },
+  resetBtn: {
+    borderWidth: 1,
+    borderColor: '#242424',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
+  },
+  resetBtnText: {
+    fontFamily: 'monospace',
+    fontSize: 10,
+    color: '#666666',
+    letterSpacing: 0.5,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  progressBar: {
+    flex: 1,
+    height: 3,
+    backgroundColor: '#242424',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#ffffff',
+    borderRadius: 2,
+  },
+  progressText: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    color: '#666666',
+  },
+
+  // Day section
+  dayHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  dayName: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  badgeText: {
+    fontFamily: 'monospace',
+    fontSize: 10,
+    letterSpacing: 0.5,
+  },
+  badgeTrain: { backgroundColor: '#ffffff' },
+  badgeTrainText: { color: '#000000' },
+  badgeRest: { backgroundColor: '#181818', borderWidth: 1, borderColor: '#333333' },
+  badgeRestText: { color: '#666666' },
+
+  // Macros
+  macroStrip: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 20,
+  },
+  macroBox: {
+    flex: 1,
+    backgroundColor: '#111111',
+    borderWidth: 1,
+    borderColor: '#242424',
+    borderRadius: 8,
+    padding: 10,
+    alignItems: 'center',
+  },
+  macroVal: {
+    fontFamily: 'monospace',
+    fontSize: 17,
+    fontWeight: '500',
+    color: '#ffffff',
+  },
+  macroLbl: {
+    fontSize: 10,
+    color: '#666666',
+    marginTop: 2,
+    letterSpacing: 0.4,
+  },
+
+  // Meals
+  mealsList: {
+    gap: 8,
+    marginBottom: 16,
+  },
+
+  // Summary
+  daySummary: {
+    backgroundColor: '#111111',
+    borderWidth: 1,
+    borderColor: '#242424',
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 12,
+  },
+  summaryLabel: {
+    fontFamily: 'monospace',
+    fontSize: 10,
+    color: '#666666',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  summaryBar: {
+    height: 4,
+    backgroundColor: '#242424',
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  summaryFill: {
+    height: '100%',
+    backgroundColor: '#ffffff',
+    borderRadius: 2,
+  },
+  summaryCount: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  bold: { color: '#ffffff', fontWeight: '500' },
+
+  // Note
+  noteBox: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: '#181818',
+    borderLeftWidth: 2,
+    borderLeftColor: '#3a3a3a',
+    borderRadius: 8,
+  },
+  noteText: {
+    fontSize: 12,
+    color: '#666666',
+    lineHeight: 20,
+  },
+});

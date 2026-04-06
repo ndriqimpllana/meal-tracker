@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Meal Tracker",
+    "slug": "meal-tracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "backgroundColor": "#000000",
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#000000"
+      },
+      "softwareKeyboardLayoutMode": "pan"
+    },
+    "platforms": ["android", "ios"]
+  }
+}
