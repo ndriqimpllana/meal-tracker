@@ -1,0 +1,61 @@
+.nav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 20px;
+  scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display: none; }
+
+.btn {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 10px;
+  min-width: 52px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  transition: all 0.15s;
+}
+.btn:hover { border-color: var(--border2); }
+
+.btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+}
+.btn.active .short,
+.btn.active .num,
+.btn.active .dot { color: #000; }
+
+.short {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+.btn.active .short { color: #000; }
+
+.num {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--muted2);
+  display: block;
+}
+
+.training:not(.active) { border-color: var(--muted2); }
+.training:not(.active) .dot { background: var(--accent); opacity: 0.5; }
+
+.done:not(.active) .dot { background: var(--accent); opacity: 1; }
+.partial:not(.active) .dot { background: var(--accent); opacity: 0.7; }
