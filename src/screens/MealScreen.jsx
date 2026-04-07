@@ -4,12 +4,12 @@ import {
   ScrollView, StatusBar, Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { DAYS, TOTAL_MEALS } from './src/data/days';
-import { useStorage } from './src/hooks/useStorage';
-import DayNav from './src/components/DayNav';
-import MealCard from './src/screens/MealScreen';
+import { DAYS, TOTAL_MEALS } from '../data/days';
+import { useStorage } from '../hooks/useStorage';
+import DayNav from '../components/DayNav';
+import MealCard from '../components/MealCard';
 
-export default function App() {
+export default function MealScreen() {
   const today = new Date().getDay(); // 0=Sun
   const dayMap = [6, 0, 1, 2, 3, 4, 5];
   const [activeDay, setActiveDay] = useState(dayMap[today]);

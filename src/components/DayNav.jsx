@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 
-export default function DayNav({ days, activeDay, checkedMap, onSelect }) {
+export default function DayNav({ days, activeDay, todayIndex, checkedMap, onSelect }) {
   return (
     <ScrollView
       horizontal
@@ -13,6 +13,7 @@ export default function DayNav({ days, activeDay, checkedMap, onSelect }) {
         const any = d.meals.some((_, mi) => checkedMap[`${i}-${mi}`]);
         const isActive = i === activeDay;
         const isTraining = d.type === 'training';
+        const isToday = i === todayIndex;
 
         return (
           <TouchableOpacity
@@ -25,7 +26,9 @@ export default function DayNav({ days, activeDay, checkedMap, onSelect }) {
             onPress={() => onSelect(i)}
             activeOpacity={0.7}
           >
-            <Text style={[s.short, isActive && s.activeText]}>{d.short}</Text>
+            <Text style={[s.short, isActive && s.activeText]}>
+              {isToday && isActive ? 'TODAY' : d.short}
+            </Text>
             <Text style={[s.num, isActive && s.activeText]}>{i + 1}</Text>
             <View style={[
               s.dot,
@@ -57,6 +60,7 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#242424',
     backgroundColor: '#111111',
+    overflow: 'hidden',
   },
   btnActive: {
     backgroundColor: '#ffffff',
@@ -89,4 +93,5 @@ const s = StyleSheet.create({
   dotTraining: { backgroundColor: '#ffffff', opacity: 0.5 },
   dotDone:     { backgroundColor: '#ffffff' },
   dotPartial:  { backgroundColor: '#ffffff', opacity: 0.7 },
+
 });
