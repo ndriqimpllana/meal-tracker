@@ -11,9 +11,20 @@ export default function MealCard({ meal, checked, onToggle }) {
         {checked && <Text style={s.checkmark}>✓</Text>}
       </View>
       <View style={s.info}>
-        <Text style={s.slot}>{meal.slot}</Text>
-        <Text style={s.name}>{meal.name}</Text>
-        <Text style={s.macros}>{meal.macros}</Text>
+        <Text style={[s.slot, checked && s.dimText]}>{meal.slot}</Text>
+        <Text style={[s.name, checked && s.dimText]}>{meal.name}</Text>
+        <Text style={[s.desc, checked && s.dimText]}>{meal.desc}</Text>
+        <View style={s.macroRow}>
+          <Text style={[s.macroChip, checked && s.dimText]}>{meal.kcal} kcal</Text>
+          <Text style={[s.macroDot, checked && s.dimText]}>·</Text>
+          <Text style={[s.macroChip, checked && s.dimText]}>{meal.protein}g P</Text>
+          <Text style={[s.macroDot, checked && s.dimText]}>·</Text>
+          <Text style={[s.macroChip, checked && s.dimText]}>{meal.carbs}g C</Text>
+          <Text style={[s.macroDot, checked && s.dimText]}>·</Text>
+          <Text style={[s.macroChip, checked && s.dimText]}>{meal.fat}g F</Text>
+          <Text style={[s.macroDot, checked && s.dimText]}>·</Text>
+          <Text style={[s.macroChip, checked && s.dimText]}>{meal.fiber}g fib</Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -31,15 +42,15 @@ const s = StyleSheet.create({
     borderRadius: 10,
   },
   cardChecked: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderColor: '#333333',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderColor: '#1e1e1e',
   },
 
   circle: {
     flexShrink: 0,
     width: 20,
     height: 20,
-    marginTop: 1,
+    marginTop: 2,
     borderRadius: 10,
     borderWidth: 1.5,
     borderColor: '#3a3a3a',
@@ -66,15 +77,36 @@ const s = StyleSheet.create({
     marginBottom: 3,
   },
   name: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
     color: '#ffffff',
-    lineHeight: 19,
+    lineHeight: 20,
+    marginBottom: 4,
   },
-  macros: {
+  desc: {
+    fontSize: 12,
+    color: '#888888',
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  macroRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 3,
+  },
+  macroChip: {
     fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#666666',
-    marginTop: 6,
+    fontSize: 10,
+    color: '#555555',
+    letterSpacing: 0.2,
+  },
+  macroDot: {
+    fontFamily: 'monospace',
+    fontSize: 10,
+    color: '#333333',
+  },
+  dimText: {
+    color: '#333333',
   },
 });

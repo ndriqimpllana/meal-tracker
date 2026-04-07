@@ -82,6 +82,7 @@ export default function App() {
               { val: String(day.cal), lbl: 'Calories' },
               { val: `${day.protein}g`, lbl: 'Protein' },
               { val: `${day.carbs}g`, lbl: 'Carbs' },
+              { val: `${day.fiber}g`, lbl: 'Fiber' },
             ].map(({ val, lbl }) => (
               <View key={lbl} style={s.macroBox}>
                 <Text style={s.macroVal}>{val}</Text>
@@ -92,17 +93,14 @@ export default function App() {
 
           {/* ── Meals list ── */}
           <View style={s.mealsList}>
-            {day.meals
-              .map((meal, i) => ({ meal, i }))
-              .filter(({ i }) => !checked[`${activeDay}-${i}`])
-              .map(({ meal, i }) => (
-                <MealCard
-                  key={i}
-                  meal={meal}
-                  checked={false}
-                  onToggle={() => toggleMeal(activeDay, i)}
-                />
-              ))}
+            {day.meals.map((meal, i) => (
+              <MealCard
+                key={i}
+                meal={meal}
+                checked={!!checked[`${activeDay}-${i}`]}
+                onToggle={() => toggleMeal(activeDay, i)}
+              />
+            ))}
           </View>
 
           {/* ── Day summary ── */}
