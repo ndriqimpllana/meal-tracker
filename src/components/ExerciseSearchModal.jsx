@@ -231,8 +231,8 @@ const s = StyleSheet.create({
     color: '#000000',
   },
 
-  chipsScroll: { marginBottom: 14, paddingBottom: 6 },
-  chips: { gap: 6, paddingRight: 4, paddingTop: 4, paddingBottom: 8 },
+  chipsScroll: { marginBottom: 14, height: 44 },
+  chips: { gap: 6, paddingRight: 4, alignItems: 'center' },
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
