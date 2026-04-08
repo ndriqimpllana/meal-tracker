@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { useWorkouts, useWorkoutLogs } from '../hooks/useWorkouts';
 import ExerciseSearchModal from '../components/ExerciseSearchModal';
 import LogSetModal from '../components/LogSetModal';
 import SessionSummaryModal from '../components/SessionSummaryModal';
+import SwipeableCard from '../components/SwipeableCard';
 
 const ACCENT = '#4ade80';
 
@@ -24,7 +25,8 @@ export default function TrainingScreen() {
   const [searchVisible, setSearchVisible] = useState(false);
   const [selectedEx, setSelectedEx]       = useState(null);
   const [summaryVisible, setSummaryVisible] = useState(false);
-  const [copyVisible, setCopyVisible]     = useState(false);
+  const [copyVisible, setCopyVisible]       = useState(false);
+  const [removeTarget, setRemoveTarget]     = useState(null);
   const [plan, setPlan]                   = useWorkouts();
   const [logs, setLogs]                   = useWorkoutLogs();
 
@@ -47,22 +49,14 @@ export default function TrainingScreen() {
     }));
   };
 
-  const removeExercise = (exId) => {
-    Alert.alert(
-      'Remove Exercise',
-      'Remove this exercise from the day?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove', style: 'destructive', onPress: () => {
-            setPlan(prev => ({
-              ...prev,
-              [activeDay]: (prev[activeDay] ?? []).filter(e => e.id !== exId),
-            }));
-          },
-        },
-      ]
-    );
+  const removeExercise = (exId) => setRemoveTarget(exId);
+
+  const confirmRemove = () => {
+    setPlan(prev => ({
+      ...prev,
+      [activeDay]: (prev[activeDay] ?? []).filter(e => e.id !== removeTarget),
+    }));
+    setRemoveTarget(null);
   };
 
   const copyPlanToDay = (targetDayIndex) => {
@@ -177,35 +171,37 @@ export default function TrainingScreen() {
               const hasLogged      = todaySets.length > 0;
 
               return (
-                <TouchableOpacity
+                <SwipeableCard
                   key={i}
                   style={[s.exCard, hasLogged && s.exCardActive]}
-                  onPress={() => setSelectedEx(ex)}
-                  onLongPress={() => removeExercise(ex.id)}
-                  activeOpacity={0.7}
-                  delayLongPress={500}
+                  onSwipe={() => removeExercise(ex.id)}
                 >
-                  <View style={s.exCardTop}>
-                    <View style={s.exCardLeft}>
-                      <Text style={s.exName}>{ex.name}</Text>
-                      <Text style={s.exMeta}>{ex.category} · {ex.equipment}</Text>
-                    </View>
-                    {hasLogged && (
-                      <View style={s.setsBadge}>
-                        <Text style={s.setsBadgeText}>{todaySets.length}</Text>
-                        <Text style={s.setsBadgeLabel}>sets</Text>
+                  <TouchableOpacity
+                    onPress={() => setSelectedEx(ex)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={s.exCardTop}>
+                      <View style={s.exCardLeft}>
+                        <Text style={s.exName}>{ex.name}</Text>
+                        <Text style={s.exMeta}>{ex.category} · {ex.equipment}</Text>
                       </View>
-                    )}
-                  </View>
-                  <View style={s.exCardBottom}>
-                    <Text style={s.lastSession}>
-                      {lastSesh
-                        ? `Last: ${lastSesh.sets} sets · ${lastSesh.maxWeight} lbs max · ${lastSesh.date}`
-                        : 'No previous session'}
-                    </Text>
-                    <Text style={s.longPressHint}>Hold to remove</Text>
-                  </View>
-                </TouchableOpacity>
+                      {hasLogged && (
+                        <View style={s.setsBadge}>
+                          <Text style={s.setsBadgeText}>{todaySets.length}</Text>
+                          <Text style={s.setsBadgeLabel}>sets</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View style={s.exCardBottom}>
+                      <Text style={s.lastSession}>
+                        {lastSesh
+                          ? `Last: ${lastSesh.sets} sets · ${lastSesh.maxWeight} lbs max · ${lastSesh.date}`
+                          : 'No previous session'}
+                      </Text>
+                      <Text style={s.swipeHint}>Swipe to remove</Text>
+                    </View>
+                  </TouchableOpacity>
+                </SwipeableCard>
               );
             })
           )}
@@ -224,6 +220,24 @@ export default function TrainingScreen() {
           <Text style={s.addBtnText}>+ Add Exercise</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Remove exercise modal */}
+      <Modal visible={!!removeTarget} transparent animationType="fade">
+        <View style={s.copyOverlay}>
+          <View style={s.copyDialog}>
+            <Text style={s.copyTitle}>Remove Exercise?</Text>
+            <Text style={s.copySubtitle}>This will remove it from {TRAINING_DAYS.find(d => d.index === activeDay)?.name}</Text>
+            <View style={s.dialogBtns}>
+              <TouchableOpacity style={s.dialogCancel} onPress={() => setRemoveTarget(null)} activeOpacity={0.7}>
+                <Text style={s.dialogCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.dialogRemove} onPress={confirmRemove} activeOpacity={0.7}>
+                <Text style={s.dialogRemoveText}>Remove</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Copy plan modal */}
       <Modal visible={copyVisible} transparent animationType="fade">
@@ -441,7 +455,7 @@ const s = StyleSheet.create({
     color: '#444444',
     flex: 1,
   },
-  longPressHint: {
+  swipeHint: {
     fontFamily: 'monospace',
     fontSize: 9,
     color: '#333333',
@@ -542,5 +556,35 @@ const s = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 11,
     color: '#666666',
+  },
+
+  dialogBtns: { flexDirection: 'row', gap: 10 },
+  dialogCancel: {
+    flex: 1,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#242424',
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  dialogCancelText: {
+    fontFamily: 'monospace',
+    fontSize: 12,
+    color: '#666666',
+  },
+  dialogRemove: {
+    flex: 1,
+    paddingVertical: 10,
+    backgroundColor: '#1a0a0a',
+    borderWidth: 1,
+    borderColor: '#f8717155',
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  dialogRemoveText: {
+    fontFamily: 'monospace',
+    fontSize: 12,
+    color: '#f87171',
+    fontWeight: '600',
   },
 });

@@ -52,9 +52,9 @@ export default function MealScreen() {
     setResetVisible(false);
   };
 
-  const mealsUpToToday  = DAYS.slice(0, todayIndex + 1).reduce((s, d) => s + d.meals.length, 0);
+  const totalMeals      = DAYS.reduce((s, d) => s + d.meals.length, 0);
   const totalDone       = Object.values(checked).filter(Boolean).length;
-  const weekPct         = Math.round((totalDone / mealsUpToToday) * 100);
+  const weekPct         = Math.round((totalDone / totalMeals) * 100);
 
   const day    = DAYS[activeDay];
   const dayDone = day.meals.filter((_, i) => checked[`${activeDay}-${i}`]).length;
@@ -69,7 +69,6 @@ export default function MealScreen() {
           <View style={s.header}>
             <View style={s.headerTop}>
               <View>
-                <Text style={s.appLabel}>Meal Tracker</Text>
                 <Text style={s.title}>Your plan{'\n'}181 lbs · recomp</Text>
               </View>
               <View style={s.headerBtns}>
@@ -87,7 +86,7 @@ export default function MealScreen() {
               <View style={s.progressBar}>
                 <View style={[s.progressFill, { width: `${weekPct}%` }]} />
               </View>
-              <Text style={s.progressText}>{totalDone} / {mealsUpToToday} meals</Text>
+              <Text style={s.progressText}>{totalDone} / {totalMeals} meals</Text>
             </View>
 
             {/* Water tracker */}
