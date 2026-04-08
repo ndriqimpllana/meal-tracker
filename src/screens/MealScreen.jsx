@@ -3,7 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet,
   ScrollView, Modal,
 } from 'react-native';
-import { DAYS, TOTAL_MEALS } from '../data/days';
+import { DAYS } from '../data/days';
 import { useStorage } from '../hooks/useStorage';
 import DayNav from '../components/DayNav';
 import MealCard from '../components/MealCard';
@@ -29,8 +29,10 @@ export default function MealScreen() {
   
  }
 
+  // Only count meals up to and including today for the week progress
+  const mealsUpToToday = DAYS.slice(0, todayIndex + 1).reduce((s, d) => s + d.meals.length, 0);
   const totalDone = Object.values(checked).filter(Boolean).length;
-  const weekPct = Math.round((totalDone / TOTAL_MEALS) * 100);
+  const weekPct = Math.round((totalDone / mealsUpToToday) * 100);
 
   const day = DAYS[activeDay];
   const dayDone = day.meals.filter((_, i) => checked[`${activeDay}-${i}`]).length;
@@ -56,7 +58,7 @@ export default function MealScreen() {
               <View style={s.progressBar}>
                 <View style={[s.progressFill, { width: `${weekPct}%` }]} />
               </View>
-              <Text style={s.progressText}>{totalDone} / {TOTAL_MEALS} meals</Text>
+              <Text style={s.progressText}>{totalDone} / {mealsUpToToday} meals</Text>
             </View>
           </View>
 
@@ -79,6 +81,7 @@ export default function MealScreen() {
               { val: String(day.cal), lbl: 'Calories' },
               { val: `${day.protein}g`, lbl: 'Protein' },
               { val: `${day.carbs}g`, lbl: 'Carbs' },
+              { val: `${day.fat}g`, lbl: 'Fat' },
               { val: `${day.fiber}g`, lbl: 'Fiber' },
             ].map(({ val, lbl }) => (
               <View key={lbl} style={s.macroBox}>
