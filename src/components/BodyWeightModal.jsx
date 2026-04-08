@@ -29,7 +29,7 @@ export default function BodyWeightModal({ visible, onClose }) {
     const diff = (current - previous).toFixed(1);
     if (diff > 0) return { symbol: '↑', color: '#f87171', text: `+${diff} lbs` };
     if (diff < 0) return { symbol: '↓', color: ACCENT,    text: `${diff} lbs` };
-    return { symbol: '–', color: '#666666', text: 'no change' };
+    return { symbol: '–', color: '#536080', text: 'no change' };
   };
 
   const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date));
@@ -41,8 +41,8 @@ export default function BodyWeightModal({ visible, onClose }) {
 
           <View style={s.header}>
             <Text style={s.title}>Body Weight</Text>
-            <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
-              <Text style={s.closeBtn}>Close</Text>
+            <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={s.closeBtnWrap}>
+              <Text style={s.closeBtn}>✕ Close</Text>
             </TouchableOpacity>
           </View>
 
@@ -53,7 +53,7 @@ export default function BodyWeightModal({ visible, onClose }) {
               <TextInput
                 style={s.input}
                 placeholder={todayEntry ? String(todayEntry.weight) : '0'}
-                placeholderTextColor="#555555"
+                placeholderTextColor="#3d4f6b"
                 value={input}
                 onChangeText={setInput}
                 keyboardType="decimal-pad"
@@ -105,11 +105,11 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   sheet: {
-    backgroundColor: '#111111',
+    backgroundColor: '#131929',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     padding: 16,
     maxHeight: '75%',
   },
@@ -122,12 +122,21 @@ const s = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
+  },
+  closeBtnWrap: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#f8717155',
+    backgroundColor: '#1a0e0e',
   },
   closeBtn: {
     fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#666666',
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#f87171',
   },
 
   inputRow: {
@@ -140,17 +149,17 @@ const s = StyleSheet.create({
   inputLabel: {
     fontFamily: 'monospace',
     fontSize: 9,
-    color: '#666666',
+    color: '#536080',
     letterSpacing: 0.8,
   },
   input: {
-    backgroundColor: '#000000',
+    backgroundColor: '#0b0f1a',
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    color: '#ffffff',
+    color: '#e8edf5',
     fontFamily: 'monospace',
     fontSize: 20,
     textAlign: 'center',
@@ -170,13 +179,13 @@ const s = StyleSheet.create({
   },
 
   empty: { paddingVertical: 30, alignItems: 'center' },
-  emptyText: { fontFamily: 'monospace', fontSize: 11, color: '#444444' },
+  emptyText: { fontFamily: 'monospace', fontSize: 11, color: '#3d4f6b' },
 
   list: { flex: 1 },
   sectionLabel: {
     fontFamily: 'monospace',
     fontSize: 9,
-    color: '#444444',
+    color: '#3d4f6b',
     letterSpacing: 1,
     marginBottom: 10,
   },
@@ -186,12 +195,12 @@ const s = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: '#1c2640',
   },
   rowDate: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: '#555555',
+    color: '#536080',
   },
   rowRight: {
     flexDirection: 'row',
@@ -206,6 +215,6 @@ const s = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 13,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
   },
 });

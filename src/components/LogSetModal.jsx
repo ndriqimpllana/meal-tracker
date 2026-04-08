@@ -69,7 +69,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
                 <Text style={s.sheetMeta}>{exercise?.category} · {exercise?.equipment}</Text>
               </View>
               <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={s.closeBtnWrap}>
-                <Text style={s.closeBtn}>Close</Text>
+                <Text style={s.closeBtn}>✕ Close</Text>
               </TouchableOpacity>
             </View>
 
@@ -118,7 +118,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
                 <TextInput
                   style={s.input}
                   placeholder="0"
-                  placeholderTextColor="#555555"
+                  placeholderTextColor="#3d4f6b"
                   value={weight}
                   onChangeText={setWeight}
                   keyboardType="decimal-pad"
@@ -129,7 +129,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
                 <TextInput
                   style={s.input}
                   placeholder="0"
-                  placeholderTextColor="#555555"
+                  placeholderTextColor="#3d4f6b"
                   value={reps}
                   onChangeText={setReps}
                   keyboardType="number-pad"
@@ -221,11 +221,11 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   sheet: {
-    backgroundColor: '#111111',
+    backgroundColor: '#131929',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     padding: 16,
     maxHeight: '85%',
   },
@@ -239,21 +239,26 @@ const s = StyleSheet.create({
   sheetTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
   },
   sheetMeta: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#666666',
+    color: '#536080',
   },
   closeBtnWrap: {
-    paddingVertical: 10,
-    paddingLeft: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#f8717155',
+    backgroundColor: '#1a0e0e',
   },
   closeBtn: {
     fontFamily: 'monospace',
-    fontSize: 13,
-    color: '#666666',
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#f87171',
   },
 
   instructionsToggle: {
@@ -274,16 +279,16 @@ const s = StyleSheet.create({
     fontWeight: '600',
   },
   instructionsBox: {
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#0b0f1a',
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: '#1c2640',
     borderRadius: 8,
     padding: 12,
     marginBottom: 14,
   },
   instructionsText: {
     fontSize: 12,
-    color: '#888888',
+    color: '#8b9cbf',
     lineHeight: 19,
   },
 
@@ -327,7 +332,7 @@ const s = StyleSheet.create({
   },
   timerSkip: {
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: '#253048',
     borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -335,7 +340,7 @@ const s = StyleSheet.create({
   timerSkipText: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: '#666666',
+    color: '#536080',
   },
 
   inputRow: {
@@ -348,17 +353,17 @@ const s = StyleSheet.create({
   inputLabel: {
     fontFamily: 'monospace',
     fontSize: 9,
-    color: '#666666',
+    color: '#536080',
     letterSpacing: 0.8,
   },
   input: {
-    backgroundColor: '#000000',
+    backgroundColor: '#0b0f1a',
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    color: '#ffffff',
+    color: '#e8edf5',
     fontFamily: 'monospace',
     fontSize: 18,
     textAlign: 'center',
@@ -385,7 +390,7 @@ const s = StyleSheet.create({
   emptyText: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: '#444444',
+    color: '#3d4f6b',
   },
 
   setsHeader: {
@@ -397,7 +402,7 @@ const s = StyleSheet.create({
     flex: 1,
     fontFamily: 'monospace',
     fontSize: 9,
-    color: '#444444',
+    color: '#3d4f6b',
     letterSpacing: 0.8,
   },
   setRow: {
@@ -406,24 +411,24 @@ const s = StyleSheet.create({
     paddingVertical: 9,
     paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: '#1c2640',
   },
   setNum: {
     flex: 1,
     fontFamily: 'monospace',
     fontSize: 12,
-    color: '#666666',
+    color: '#536080',
   },
   setValue: {
     flex: 1,
     fontFamily: 'monospace',
     fontSize: 13,
-    color: '#ffffff',
+    color: '#e8edf5',
   },
   removeBtn: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: '#444444',
+    color: '#3d4f6b',
     paddingLeft: 8,
   },
 
@@ -431,13 +436,13 @@ const s = StyleSheet.create({
     marginTop: 20,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#1e1e1e',
+    borderTopColor: '#1c2640',
     marginBottom: 4,
   },
   chartLabel: {
     fontFamily: 'monospace',
     fontSize: 9,
-    color: '#444444',
+    color: '#3d4f6b',
     letterSpacing: 1,
     marginBottom: 12,
   },
@@ -472,19 +477,19 @@ const s = StyleSheet.create({
   chartBarDate: {
     fontFamily: 'monospace',
     fontSize: 7,
-    color: '#444444',
+    color: '#3d4f6b',
   },
 
   historySection: {
     marginTop: 20,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#1e1e1e',
+    borderTopColor: '#1c2640',
   },
   historyLabel: {
     fontFamily: 'monospace',
     fontSize: 9,
-    color: '#444444',
+    color: '#3d4f6b',
     letterSpacing: 1,
     marginBottom: 10,
   },
@@ -494,17 +499,17 @@ const s = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 7,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: '#1c2640',
   },
   historyDate: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#555555',
+    color: '#536080',
   },
   historyData: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: '#888888',
+    color: '#8b9cbf',
   },
   historyPR: {
     color: ACCENT,

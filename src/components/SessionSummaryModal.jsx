@@ -42,8 +42,8 @@ export default function SessionSummaryModal({ visible, onClose, exercises, logs,
               <Text style={s.label}>WORKOUT COMPLETE</Text>
               <Text style={s.title}>Session Summary</Text>
             </View>
-            <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
-              <Text style={s.closeBtn}>Close</Text>
+            <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={s.closeBtnWrap}>
+              <Text style={s.closeBtn}>✕ Close</Text>
             </TouchableOpacity>
           </View>
 
@@ -105,11 +105,11 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   sheet: {
-    backgroundColor: '#111111',
+    backgroundColor: '#131929',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     padding: 16,
     maxHeight: '80%',
   },
@@ -129,12 +129,21 @@ const s = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
+  },
+  closeBtnWrap: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#f8717155',
+    backgroundColor: '#1a0e0e',
   },
   closeBtn: {
     fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#666666',
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#f87171',
   },
 
   totalsRow: {
@@ -144,9 +153,9 @@ const s = StyleSheet.create({
   },
   totalBox: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#1b2438',
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 10,
     padding: 12,
     alignItems: 'center',
@@ -156,27 +165,27 @@ const s = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
   },
   accentText: { color: ACCENT },
   totalLbl: {
     fontFamily: 'monospace',
     fontSize: 9,
-    color: '#555555',
+    color: '#536080',
     letterSpacing: 0.5,
   },
 
   sectionLabel: {
     fontFamily: 'monospace',
     fontSize: 9,
-    color: '#444444',
+    color: '#3d4f6b',
     letterSpacing: 1,
     marginBottom: 10,
   },
   noSets: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: '#444444',
+    color: '#3d4f6b',
     textAlign: 'center',
     paddingVertical: 20,
   },
@@ -186,18 +195,18 @@ const s = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: '#1c2640',
   },
   exLeft: { flex: 1, gap: 3 },
   exName: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
   },
   exMeta: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#555555',
+    color: '#536080',
   },
   exVolume: { alignItems: 'flex-end' },
   exVolumeVal: {

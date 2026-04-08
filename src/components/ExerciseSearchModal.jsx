@@ -122,8 +122,8 @@ export default function ExerciseSearchModal({ visible, onClose, onAdd }) {
           {/* Header */}
           <View style={s.sheetHeader}>
             <Text style={s.sheetTitle}>Add Exercise</Text>
-            <TouchableOpacity onPress={handleClose} activeOpacity={0.7}>
-              <Text style={s.closeBtn}>Close</Text>
+            <TouchableOpacity onPress={handleClose} activeOpacity={0.7} style={s.closeBtnWrap}>
+              <Text style={s.closeBtn}>✕ Close</Text>
             </TouchableOpacity>
           </View>
 
@@ -152,7 +152,7 @@ export default function ExerciseSearchModal({ visible, onClose, onAdd }) {
                 <TextInput
                   style={s.input}
                   placeholder="Search by name..."
-                  placeholderTextColor="#555555"
+                  placeholderTextColor="#3d4f6b"
                   value={query}
                   onChangeText={setQuery}
                   onSubmitEditing={() => searchByText(query)}
@@ -215,7 +215,7 @@ export default function ExerciseSearchModal({ visible, onClose, onAdd }) {
                 <TextInput
                   style={s.customInput}
                   placeholder="e.g. Cable Face Pull"
-                  placeholderTextColor="#555555"
+                  placeholderTextColor="#3d4f6b"
                   value={customName}
                   onChangeText={setCustomName}
                   autoFocus
@@ -227,7 +227,7 @@ export default function ExerciseSearchModal({ visible, onClose, onAdd }) {
                 <TextInput
                   style={s.customInput}
                   placeholder="e.g. Shoulders"
-                  placeholderTextColor="#555555"
+                  placeholderTextColor="#3d4f6b"
                   value={customCategory}
                   onChangeText={setCustomCategory}
                 />
@@ -238,7 +238,7 @@ export default function ExerciseSearchModal({ visible, onClose, onAdd }) {
                 <TextInput
                   style={s.customInput}
                   placeholder="e.g. Cable Machine"
-                  placeholderTextColor="#555555"
+                  placeholderTextColor="#3d4f6b"
                   value={customEquipment}
                   onChangeText={setCustomEquipment}
                 />
@@ -267,11 +267,11 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   sheet: {
-    backgroundColor: '#111111',
+    backgroundColor: '#131929',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     padding: 16,
     maxHeight: '85%',
   },
@@ -284,12 +284,21 @@ const s = StyleSheet.create({
   sheetTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
+  },
+  closeBtnWrap: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#f8717155',
+    backgroundColor: '#1a0e0e',
   },
   closeBtn: {
     fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#666666',
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#f87171',
   },
 
   modeRow: {
@@ -302,9 +311,9 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     alignItems: 'center',
-    backgroundColor: '#000000',
+    backgroundColor: '#0b0f1a',
   },
   modeBtnActive: {
     backgroundColor: '#ffffff',
@@ -313,7 +322,7 @@ const s = StyleSheet.create({
   modeBtnText: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: '#666666',
+    color: '#536080',
   },
   modeBtnTextActive: {
     color: '#000000',
@@ -327,13 +336,13 @@ const s = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#0b0f1a',
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    color: '#ffffff',
+    color: '#e8edf5',
     fontFamily: 'monospace',
     fontSize: 12,
   },
@@ -357,8 +366,8 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#242424',
-    backgroundColor: '#000000',
+    borderColor: '#253048',
+    backgroundColor: '#0b0f1a',
   },
   chipActive: {
     backgroundColor: ACCENT,
@@ -367,7 +376,7 @@ const s = StyleSheet.create({
   chipText: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#666666',
+    color: '#536080',
     letterSpacing: 0.3,
   },
   chipTextActive: {
@@ -390,21 +399,21 @@ const s = StyleSheet.create({
   resultName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
   },
   resultMeta: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#666666',
+    color: '#536080',
   },
   separator: {
     height: 1,
-    backgroundColor: '#1e1e1e',
+    backgroundColor: '#1c2640',
   },
   noResults: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: '#666666',
+    color: '#536080',
     textAlign: 'center',
     paddingVertical: 20,
   },
@@ -414,24 +423,24 @@ const s = StyleSheet.create({
   customHint: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: '#555555',
+    color: '#536080',
     marginBottom: 4,
   },
   customField: { gap: 6 },
   customLabel: {
     fontFamily: 'monospace',
     fontSize: 9,
-    color: '#666666',
+    color: '#536080',
     letterSpacing: 0.8,
   },
   customInput: {
-    backgroundColor: '#000000',
+    backgroundColor: '#0b0f1a',
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 11,
-    color: '#ffffff',
+    color: '#e8edf5',
     fontFamily: 'monospace',
     fontSize: 13,
   },
@@ -443,7 +452,7 @@ const s = StyleSheet.create({
     marginTop: 8,
   },
   customAddBtnDisabled: {
-    backgroundColor: '#242424',
+    backgroundColor: '#253048',
   },
   customAddBtnText: {
     fontFamily: 'monospace',

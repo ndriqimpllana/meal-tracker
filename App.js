@@ -21,6 +21,6 @@ export default function App() {
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#000000' },
-  safe: { flex: 1, backgroundColor: '#000000' },
+  root: { flex: 1, backgroundColor: '#0b0f1a' },
+  safe: { flex: 1, backgroundColor: '#0b0f1a' },
 });

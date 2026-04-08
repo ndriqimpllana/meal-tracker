@@ -58,8 +58,8 @@ const s = StyleSheet.create({
     minWidth: 52,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#242424',
-    backgroundColor: '#111111',
+    borderColor: '#253048',
+    backgroundColor: '#131929',
     overflow: 'hidden',
   },
   btnActive: {
@@ -67,19 +67,19 @@ const s = StyleSheet.create({
     borderColor: '#ffffff',
   },
   btnTraining: {
-    borderColor: '#3a3a3a',
+    borderColor: '#253048',
   },
 
   short: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#666666',
+    color: '#536080',
     letterSpacing: 0.5,
   },
   num: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
   },
   activeText: { color: '#000000' },
 
@@ -88,10 +88,9 @@ const s = StyleSheet.create({
     height: 4,
     borderRadius: 2,
   },
-  dotDefault:  { backgroundColor: '#3a3a3a' },
+  dotDefault:  { backgroundColor: '#3d4f6b' },
   dotActive:   { backgroundColor: '#000000' },
-  dotTraining: { backgroundColor: '#ffffff', opacity: 0.5 },
-  dotDone:     { backgroundColor: '#ffffff' },
-  dotPartial:  { backgroundColor: '#ffffff', opacity: 0.7 },
-
+  dotTraining: { backgroundColor: '#60a5fa', opacity: 0.6 },
+  dotDone:     { backgroundColor: '#4ade80' },
+  dotPartial:  { backgroundColor: '#fbbf24' },
 });

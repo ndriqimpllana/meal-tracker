@@ -30,7 +30,7 @@ export default function WorkoutHistoryModal({ visible, onClose, completedWorkout
               <Text style={s.title}>Past Workouts</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={s.closeBtnWrap} activeOpacity={0.7}>
-              <Text style={s.closeBtn}>Close</Text>
+              <Text style={s.closeBtn}>✕ Close</Text>
             </TouchableOpacity>
           </View>
 
@@ -91,11 +91,11 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   sheet: {
-    backgroundColor: '#111111',
+    backgroundColor: '#131929',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     padding: 16,
     maxHeight: '88%',
   },
@@ -115,16 +115,21 @@ const s = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
   },
   closeBtnWrap: {
-    paddingVertical: 8,
-    paddingLeft: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#f8717155',
+    backgroundColor: '#1a0e0e',
   },
   closeBtn: {
     fontFamily: 'monospace',
     fontSize: 12,
-    color: '#666666',
+    fontWeight: '600',
+    color: '#f87171',
   },
   empty: {
     paddingVertical: 48,
@@ -134,17 +139,17 @@ const s = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
   },
   emptySub: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: '#444444',
+    color: '#3d4f6b',
   },
   card: {
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#1b2438',
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 10,
     padding: 14,
     marginBottom: 10,
@@ -156,7 +161,7 @@ const s = StyleSheet.create({
   cardDate: {
     fontFamily: 'monospace',
     fontSize: 12,
-    color: '#888888',
+    color: '#8b9cbf',
     letterSpacing: 0.5,
   },
   cardBadges: {
@@ -169,8 +174,8 @@ const s = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#2a2a2a',
-    backgroundColor: '#151515',
+    borderColor: '#253048',
+    backgroundColor: '#131929',
   },
   badgeAccent: {
     borderColor: ACCENT + '44',
@@ -179,7 +184,7 @@ const s = StyleSheet.create({
   badgeText: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#666666',
+    color: '#536080',
   },
   accentText: { color: ACCENT },
   exRow: {
@@ -188,17 +193,17 @@ const s = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderTopWidth: 1,
-    borderTopColor: '#1a1a1a',
+    borderTopColor: '#1c2640',
   },
   exName: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
     flex: 1,
   },
   exMeta: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#555555',
+    color: '#536080',
   },
 });

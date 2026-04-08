@@ -25,9 +25,9 @@ export default function TabBar ({ activeTab, onSelect}) {
 const s = StyleSheet.create({
   bar: {
     flexDirection: 'row',
-    backgroundColor: '#000000',
+    backgroundColor: '#0b0f1a',
     borderTopWidth: 1,
-    borderTopColor: '#242424',
+    borderTopColor: '#253048',
     paddingBottom: 4,
     paddingTop: 8,
     paddingHorizontal: 16,
@@ -38,9 +38,9 @@ const s = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     alignItems: 'center',
-    backgroundColor: '#111111',
+    backgroundColor: '#131929',
   },
   tabActive: {
     backgroundColor: '#ffffff',
@@ -49,7 +49,7 @@ const s = StyleSheet.create({
   label: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: '#666666',
+    color: '#536080',
     letterSpacing: 0.5,
   },
   labelActive: {

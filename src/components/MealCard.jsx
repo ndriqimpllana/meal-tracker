@@ -15,15 +15,15 @@ export default function MealCard({ meal, checked, onToggle }) {
         <Text style={[s.name, checked && s.dimText]}>{meal.name}</Text>
         <Text style={[s.desc, checked && s.dimText]}>{meal.desc}</Text>
         <View style={s.macroRow}>
-          <Text style={[s.macroChip, checked && s.dimText]}>{meal.kcal} kcal</Text>
-          <Text style={[s.macroDot, checked && s.dimText]}>·</Text>
-          <Text style={[s.macroChip, checked && s.dimText]}>{meal.protein}g P</Text>
-          <Text style={[s.macroDot, checked && s.dimText]}>·</Text>
-          <Text style={[s.macroChip, checked && s.dimText]}>{meal.carbs}g C</Text>
-          <Text style={[s.macroDot, checked && s.dimText]}>·</Text>
-          <Text style={[s.macroChip, checked && s.dimText]}>{meal.fat}g F</Text>
-          <Text style={[s.macroDot, checked && s.dimText]}>·</Text>
-          <Text style={[s.macroChip, checked && s.dimText]}>{meal.fiber}g fib</Text>
+          <Text style={[s.macroKcal,    checked && s.dimText]}>{meal.kcal} kcal</Text>
+          <Text style={[s.macroDot,     checked && s.dimText]}>·</Text>
+          <Text style={[s.macroProtein, checked && s.dimText]}>{meal.protein}g P</Text>
+          <Text style={[s.macroDot,     checked && s.dimText]}>·</Text>
+          <Text style={[s.macroCarbs,   checked && s.dimText]}>{meal.carbs}g C</Text>
+          <Text style={[s.macroDot,     checked && s.dimText]}>·</Text>
+          <Text style={[s.macroFat,     checked && s.dimText]}>{meal.fat}g F</Text>
+          <Text style={[s.macroDot,     checked && s.dimText]}>·</Text>
+          <Text style={[s.macroFiber,   checked && s.dimText]}>{meal.fiber}g fib</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -36,14 +36,14 @@ const s = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 12,
     padding: 14,
-    backgroundColor: '#111111',
+    backgroundColor: '#131929',
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 10,
   },
   cardChecked: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderColor: '#1e1e1e',
+    backgroundColor: '#0e1220',
+    borderColor: '#1c2640',
   },
 
   circle: {
@@ -53,13 +53,13 @@ const s = StyleSheet.create({
     marginTop: 2,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#3a3a3a',
+    borderColor: '#3d4f6b',
     alignItems: 'center',
     justifyContent: 'center',
   },
   circleChecked: {
-    backgroundColor: '#ffffff',
-    borderColor: '#ffffff',
+    backgroundColor: '#4ade80',
+    borderColor: '#4ade80',
   },
   checkmark: {
     fontSize: 10,
@@ -71,7 +71,7 @@ const s = StyleSheet.create({
   slot: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#666666',
+    color: '#536080',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     marginBottom: 3,
@@ -79,13 +79,13 @@ const s = StyleSheet.create({
   name: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
     lineHeight: 20,
     marginBottom: 4,
   },
   desc: {
     fontSize: 12,
-    color: '#888888',
+    color: '#8b9cbf',
     lineHeight: 18,
     marginBottom: 8,
   },
@@ -95,18 +95,17 @@ const s = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 3,
   },
-  macroChip: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    color: '#555555',
-    letterSpacing: 0.2,
-  },
+  macroKcal:    { fontFamily: 'monospace', fontSize: 10, color: '#fb923c' },
+  macroProtein: { fontFamily: 'monospace', fontSize: 10, color: '#c084fc' },
+  macroCarbs:   { fontFamily: 'monospace', fontSize: 10, color: '#fbbf24' },
+  macroFat:     { fontFamily: 'monospace', fontSize: 10, color: '#f87171' },
+  macroFiber:   { fontFamily: 'monospace', fontSize: 10, color: '#2dd4bf' },
   macroDot: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#333333',
+    color: '#3d4f6b',
   },
   dimText: {
-    color: '#333333',
+    color: '#2d3a52',
   },
 });

@@ -12,6 +12,14 @@ import BodyWeightModal from '../components/BodyWeightModal';
 const WATER_GOAL_OZ  = 100;
 const WATER_STEP_OZ  = 8;
 
+const MACRO_COLORS = {
+  cal:     '#fb923c',
+  protein: '#c084fc',
+  carbs:   '#fbbf24',
+  fat:     '#f87171',
+  fiber:   '#2dd4bf',
+};
+
 export default function MealScreen() {
   const today = new Date().getDay(); // 0=Sun
   const dayMap = [6, 0, 1, 2, 3, 4, 5];
@@ -56,6 +64,14 @@ export default function MealScreen() {
   const dayDone = day.meals.filter((_, i) => checked[`${activeDay}-${i}`]).length;
   const dayPct  = Math.round((dayDone / day.meals.length) * 100);
 
+  const macros = [
+    { val: String(day.cal),      lbl: 'Calories', color: MACRO_COLORS.cal     },
+    { val: `${day.protein}g`,    lbl: 'Protein',  color: MACRO_COLORS.protein },
+    { val: `${day.carbs}g`,      lbl: 'Carbs',    color: MACRO_COLORS.carbs   },
+    { val: `${day.fat}g`,        lbl: 'Fat',      color: MACRO_COLORS.fat     },
+    { val: `${day.fiber}g`,      lbl: 'Fiber',    color: MACRO_COLORS.fiber   },
+  ];
+
   return (
     <View style={s.root}>
       <View style={s.safe}>
@@ -68,11 +84,11 @@ export default function MealScreen() {
                 <Text style={s.title}>Your plan{'\n'}181 lbs · recomp</Text>
               </View>
               <View style={s.headerBtns}>
-                <TouchableOpacity style={s.headerBtn} onPress={() => setWeightVisible(true)} activeOpacity={0.6}>
-                  <Text style={s.headerBtnText}>Log Weight</Text>
+                <TouchableOpacity style={[s.headerBtn, s.headerBtnLog]} onPress={() => setWeightVisible(true)} activeOpacity={0.6}>
+                  <Text style={[s.headerBtnText, s.headerBtnLogText]}>Log Weight</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={s.headerBtn} onPress={resetAll} activeOpacity={0.6}>
-                  <Text style={s.headerBtnText}>Reset week</Text>
+                <TouchableOpacity style={[s.headerBtn, s.headerBtnReset]} onPress={resetAll} activeOpacity={0.6}>
+                  <Text style={[s.headerBtnText, s.headerBtnResetText]}>Reset week</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -110,15 +126,12 @@ export default function MealScreen() {
 
           {/* ── Macro strip ── */}
           <View style={s.macroStrip}>
-            {[
-              { val: String(day.cal),      lbl: 'Calories' },
-              { val: `${day.protein}g`,    lbl: 'Protein'  },
-              { val: `${day.carbs}g`,      lbl: 'Carbs'    },
-              { val: `${day.fat}g`,        lbl: 'Fat'      },
-              { val: `${day.fiber}g`,      lbl: 'Fiber'    },
-            ].map(({ val, lbl }) => (
-              <View key={lbl} style={s.macroBox}>
-                <Text style={s.macroVal}>{val}</Text>
+            {macros.map(({ val, lbl, color }) => (
+              <View
+                key={lbl}
+                style={[s.macroBox, { borderColor: color + '50', backgroundColor: color + '12' }]}
+              >
+                <Text style={[s.macroVal, { color }]}>{val}</Text>
                 <Text style={s.macroLbl}>{lbl}</Text>
               </View>
             ))}
@@ -186,8 +199,8 @@ export default function MealScreen() {
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#000000' },
-  safe: { flex: 1, backgroundColor: '#000000' },
+  root: { flex: 1, backgroundColor: '#0b0f1a' },
+  safe: { flex: 1, backgroundColor: '#0b0f1a' },
   scroll: { flex: 1 },
   content: { padding: 16, paddingBottom: 60 },
 
@@ -195,7 +208,7 @@ const s = StyleSheet.create({
     paddingTop: 24,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#242424',
+    borderBottomColor: '#253048',
     marginBottom: 20,
   },
   headerTop: {
@@ -204,24 +217,16 @@ const s = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 16,
   },
-  appLabel: {
-    fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#666666',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    marginBottom: 6,
-  },
   title: {
     fontSize: 22,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
     lineHeight: 28,
   },
-  headerBtns: { gap: 6, alignItems: 'flex-end' },
+  headerBtns: { flexDirection: 'row', gap: 6, alignItems: 'flex-start', marginTop: 4 },
   headerBtn: {
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 4,
@@ -229,8 +234,22 @@ const s = StyleSheet.create({
   headerBtnText: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#666666',
+    color: '#536080',
     letterSpacing: 0.5,
+  },
+  headerBtnLog: {
+    borderColor: '#60a5fa55',
+    backgroundColor: '#0e1e3a',
+  },
+  headerBtnLogText: {
+    color: '#60a5fa',
+  },
+  headerBtnReset: {
+    borderColor: '#f8717155',
+    backgroundColor: '#1a0e0e',
+  },
+  headerBtnResetText: {
+    color: '#f87171',
   },
 
   // Water tracker
@@ -243,12 +262,12 @@ const s = StyleSheet.create({
   waterLabel: {
     fontFamily: 'monospace',
     fontSize: 9,
-    color: '#555555',
+    color: '#536080',
     letterSpacing: 1,
   },
   waterBar: {
-    height: 3,
-    backgroundColor: '#242424',
+    height: 4,
+    backgroundColor: '#1c2640',
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -260,22 +279,22 @@ const s = StyleSheet.create({
   waterCount: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#555555',
+    color: '#536080',
   },
   waterMinus: {
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
   waterPlus: {
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#60a5fa50',
     borderRadius: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: '#0a1628',
+    backgroundColor: '#0e1e3a',
   },
   waterBtnText: {
     fontFamily: 'monospace',
@@ -293,7 +312,7 @@ const s = StyleSheet.create({
   dayName: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
   },
   badge: {
     paddingHorizontal: 10,
@@ -307,35 +326,32 @@ const s = StyleSheet.create({
   },
   badgeTrain: { backgroundColor: '#ffffff' },
   badgeTrainText: { color: '#000000' },
-  badgeRest: { backgroundColor: '#181818', borderWidth: 1, borderColor: '#333333' },
-  badgeRestText: { color: '#666666' },
+  badgeRest: { backgroundColor: '#1b2438', borderWidth: 1, borderColor: '#253048' },
+  badgeRestText: { color: '#536080' },
 
   // Macros
   macroStrip: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
     marginBottom: 20,
   },
   macroBox: {
     flex: 1,
-    backgroundColor: '#111111',
     borderWidth: 1,
-    borderColor: '#242424',
     borderRadius: 8,
-    padding: 10,
+    padding: 8,
     alignItems: 'center',
   },
   macroVal: {
     fontFamily: 'monospace',
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '600',
   },
   macroLbl: {
-    fontSize: 9,
-    color: '#666666',
+    fontSize: 8,
+    color: '#536080',
     marginTop: 2,
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
   },
 
   // Meals
@@ -346,9 +362,9 @@ const s = StyleSheet.create({
 
   // Summary
   daySummary: {
-    backgroundColor: '#111111',
+    backgroundColor: '#131929',
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 10,
     padding: 14,
     marginBottom: 12,
@@ -356,41 +372,41 @@ const s = StyleSheet.create({
   summaryLabel: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#666666',
+    color: '#536080',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     marginBottom: 8,
   },
   summaryBar: {
     height: 4,
-    backgroundColor: '#242424',
+    backgroundColor: '#1c2640',
     borderRadius: 2,
     overflow: 'hidden',
     marginBottom: 8,
   },
   summaryFill: {
     height: '100%',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#4ade80',
     borderRadius: 2,
   },
   summaryCount: {
     fontSize: 12,
-    color: '#666666',
+    color: '#536080',
   },
-  bold: { color: '#ffffff', fontWeight: '500' },
+  bold: { color: '#e8edf5', fontWeight: '500' },
 
   // Note
   noteBox: {
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: '#181818',
+    backgroundColor: '#131929',
     borderLeftWidth: 2,
-    borderLeftColor: '#3a3a3a',
+    borderLeftColor: '#4ade80',
     borderRadius: 8,
   },
   noteText: {
     fontSize: 12,
-    color: '#666666',
+    color: '#8b9cbf',
     lineHeight: 20,
   },
 
@@ -403,16 +419,16 @@ const s = StyleSheet.create({
   },
   dialog: {
     width: 280,
-    backgroundColor: '#111111',
+    backgroundColor: '#131929',
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 12,
     padding: 24,
   },
   dialogTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
     marginBottom: 24,
   },
   dialogBtns: {
@@ -423,14 +439,14 @@ const s = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 6,
     alignItems: 'center',
   },
   dialogCancelText: {
     fontFamily: 'monospace',
     fontSize: 12,
-    color: '#666666',
+    color: '#536080',
   },
   dialogReset: {
     flex: 1,

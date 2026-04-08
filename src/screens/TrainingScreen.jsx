@@ -333,7 +333,7 @@ export default function TrainingScreen() {
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#000000' },
+  root: { flex: 1, backgroundColor: '#0b0f1a' },
   scroll: { flex: 1 },
   content: { padding: 16, paddingBottom: 120 },
 
@@ -341,7 +341,7 @@ const s = StyleSheet.create({
     paddingTop: 24,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#242424',
+    borderBottomColor: '#253048',
     marginBottom: 20,
   },
   headerTop: {
@@ -353,7 +353,7 @@ const s = StyleSheet.create({
   appLabel: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: '#666666',
+    color: '#536080',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
     marginBottom: 6,
@@ -361,12 +361,12 @@ const s = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
   },
   headerBtns: { flexDirection: 'row', gap: 6, alignItems: 'flex-start' },
   headerBtn: {
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 4,
@@ -375,28 +375,14 @@ const s = StyleSheet.create({
   headerBtnText: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#666666',
-    letterSpacing: 0.5,
-  },
-  copyBtn: {
-    borderWidth: 1,
-    borderColor: '#242424',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 4,
-    marginTop: 4,
-  },
-  copyBtnText: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    color: '#666666',
+    color: '#536080',
     letterSpacing: 0.5,
   },
   volumeRow: { marginTop: 4 },
   volumeText: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: '#555555',
+    color: '#536080',
   },
   volumeAccent: {
     color: ACCENT,
@@ -414,8 +400,8 @@ const s = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#242424',
-    backgroundColor: '#111111',
+    borderColor: '#253048',
+    backgroundColor: '#131929',
     gap: 4,
   },
   dayBtnActive: {
@@ -425,7 +411,7 @@ const s = StyleSheet.create({
   dayShort: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#666666',
+    color: '#536080',
     letterSpacing: 0.5,
   },
   dayShortActive: { color: '#000000' },
@@ -444,27 +430,27 @@ const s = StyleSheet.create({
     gap: 6,
   },
   emptyText: {
-    color: '#ffffff',
+    color: '#e8edf5',
     fontSize: 14,
     fontWeight: '600',
   },
   emptySubText: {
-    color: '#666666',
+    color: '#536080',
     fontFamily: 'monospace',
     fontSize: 11,
   },
 
   exCard: {
-    backgroundColor: '#111111',
+    backgroundColor: '#131929',
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 10,
     padding: 14,
     gap: 10,
   },
   exCardActive: {
     borderColor: ACCENT + '55',
-    backgroundColor: '#0d1a0d',
+    backgroundColor: '#0d1a14',
   },
   exCardTop: {
     flexDirection: 'row',
@@ -475,12 +461,12 @@ const s = StyleSheet.create({
   exName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
   },
   exMeta: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#666666',
+    color: '#536080',
   },
   setsBadge: {
     alignItems: 'center',
@@ -511,13 +497,13 @@ const s = StyleSheet.create({
   lastSession: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#444444',
+    color: '#3d4f6b',
     flex: 1,
   },
   swipeHint: {
     fontFamily: 'monospace',
     fontSize: 9,
-    color: '#333333',
+    color: '#2d3a52',
   },
 
   bottomBtns: {
@@ -564,22 +550,22 @@ const s = StyleSheet.create({
   },
   copyDialog: {
     width: 300,
-    backgroundColor: '#111111',
+    backgroundColor: '#131929',
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 12,
     padding: 20,
   },
   copyTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
     marginBottom: 4,
   },
   copySubtitle: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#555555',
+    color: '#536080',
     marginBottom: 16,
   },
   copyDayList: { gap: 8, marginBottom: 12 },
@@ -589,31 +575,31 @@ const s = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 8,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#1b2438',
   },
   copyDayText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#e8edf5',
   },
   copyDayCount: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#555555',
+    color: '#536080',
   },
   copyCancelBtn: {
     paddingVertical: 10,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 8,
   },
   copyCancelText: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: '#666666',
+    color: '#536080',
   },
 
   dialogBtns: { flexDirection: 'row', gap: 10 },
@@ -621,19 +607,19 @@ const s = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: '#253048',
     borderRadius: 6,
     alignItems: 'center',
   },
   dialogCancelText: {
     fontFamily: 'monospace',
     fontSize: 12,
-    color: '#666666',
+    color: '#536080',
   },
   dialogRemove: {
     flex: 1,
     paddingVertical: 10,
-    backgroundColor: '#1a0a0a',
+    backgroundColor: '#1a0e1a',
     borderWidth: 1,
     borderColor: '#f8717155',
     borderRadius: 6,
