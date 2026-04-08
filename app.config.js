@@ -1,7 +1,7 @@
 module.exports = {
   expo: {
-    name: 'Meal Tracker',
-    slug: 'meal-tracker',
+    name: 'Fit Check',
+    slug: 'fit-check',
     version: '1.0.0',
     orientation: 'portrait',
     backgroundColor: '#000000',
