@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { useWorkouts, useWorkoutLogs } from '../hooks/useWorkouts';
+import ExerciseSearchModal from '../components/ExerciseSearchModal';
+import LogSetModal from '../components/LogSetModal';
 
 const TRAINING_DAYS = [
   { index: 0, short: 'MON', name: 'Monday' },
@@ -16,10 +18,40 @@ const defaultDay = TRAINING_DAYS.find(d => d.index === todayIndex) ?? TRAINING_D
 
 export default function TrainingScreen() {
   const [activeDay, setActiveDay] = useState(defaultDay.index);
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [selectedEx, setSelectedEx] = useState(null);
   const [plan, setPlan] = useWorkouts();
   const [logs, setLogs] = useWorkoutLogs();
 
+  const today = new Date().toISOString().split('T')[0];
   const exercises = plan[activeDay] ?? [];
+
+  const addExercise = (ex) => {
+    setPlan(prev => ({
+      ...prev,
+      [activeDay]: [...(prev[activeDay] ?? []), ex],
+    }));
+  };
+
+  const getSets = (exId) => logs[today]?.[exId] ?? [];
+
+  const addSet = (exId, set) => {
+    setLogs(prev => ({
+      ...prev,
+      [today]: {
+        ...(prev[today] ?? {}),
+        [exId]: [...(prev[today]?.[exId] ?? []), set],
+      },
+    }));
+  };
+
+  const removeSet = (exId, index) => {
+    setLogs(prev => {
+      const sets = [...(prev[today]?.[exId] ?? [])];
+      sets.splice(index, 1);
+      return { ...prev, [today]: { ...(prev[today] ?? {}), [exId]: sets } };
+    });
+  };
 
   return (
     <View style={s.root}>
@@ -55,10 +87,11 @@ export default function TrainingScreen() {
             </View>
           ) : (
             exercises.map((ex, i) => (
-              <View key={i} style={s.exCard}>
+              <TouchableOpacity key={i} style={s.exCard} onPress={() => setSelectedEx(ex)} activeOpacity={0.7}>
                 <Text style={s.exName}>{ex.name}</Text>
                 <Text style={s.exMeta}>{ex.category} · {ex.equipment}</Text>
-              </View>
+                <Text style={s.exSets}>{getSets(ex.id).length} sets logged today</Text>
+              </TouchableOpacity>
             ))
           )}
         </View>
@@ -66,9 +99,23 @@ export default function TrainingScreen() {
       </ScrollView>
 
       {/* Add button */}
-      <TouchableOpacity style={s.addBtn} activeOpacity={0.8}>
+      <TouchableOpacity style={s.addBtn} onPress={() => setSearchVisible(true)} activeOpacity={0.8}>
         <Text style={s.addBtnText}>+ Add Exercise</Text>
       </TouchableOpacity>
+      <ExerciseSearchModal
+        visible={searchVisible}
+        onClose={() => setSearchVisible(false)}
+        onAdd={addExercise}
+      />
+      <LogSetModal
+        visible={!!selectedEx}
+        exercise={selectedEx}
+        date={today}
+        sets={selectedEx ? getSets(selectedEx.id) : []}
+        onAdd={(set) => addSet(selectedEx.id, set)}
+        onRemove={(i) => removeSet(selectedEx.id, i)}
+        onClose={() => setSelectedEx(null)}
+      />
     </View>
   );
 }
@@ -165,6 +212,12 @@ const s = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 10,
     color: '#666666',
+  },
+  exSets: {
+    fontFamily: 'monospace',
+    fontSize: 10,
+    color: '#444444',
+    marginTop: 2,
   },
 
   addBtn: {
