@@ -13,6 +13,15 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
   const [instructions, setInstructions]   = useState(null);
   const [showInstructions, setShowInstructions] = useState(false);
 
+  // Pre-fill inputs from last logged set
+  useEffect(() => {
+    if (sets.length > 0) {
+      const last = sets[sets.length - 1];
+      setWeight(String(last.weight));
+      setReps(String(last.reps));
+    }
+  }, [sets.length]);
+
   // Rest timer countdown
   useEffect(() => {
     if (!timer || timer <= 0) {
@@ -42,8 +51,6 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
   const handleAdd = () => {
     if (!weight.trim() || !reps.trim()) return;
     onAdd({ weight: parseFloat(weight), reps: parseInt(reps) });
-    setWeight('');
-    setReps('');
     setTimer(90);
   };
 
@@ -53,7 +60,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
     <Modal visible={visible} animationType="slide" transparent>
       <View style={s.overlay}>
         <View style={s.sheet}>
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
             {/* Header */}
             <View style={s.sheetHeader}>

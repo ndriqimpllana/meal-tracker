@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { useWorkouts, useWorkoutLogs } from '../hooks/useWorkouts';
 import ExerciseSearchModal from '../components/ExerciseSearchModal';
@@ -16,83 +16,90 @@ const TRAINING_DAYS = [
   { index: 5, short: 'SAT', name: 'Saturday' },
 ];
 
-const dayMap = [6, 0, 1, 2, 3, 4, 5];
+// Computed once at module level — never changes
+const dayMap   = [6, 0, 1, 2, 3, 4, 5];
 const todayIndex = dayMap[new Date().getDay()];
+const today      = new Date().toISOString().split('T')[0];
 const defaultDay = TRAINING_DAYS.find(d => d.index === todayIndex) ?? TRAINING_DAYS[0];
 
 export default function TrainingScreen() {
-  const [activeDay, setActiveDay]         = useState(defaultDay.index);
-  const [searchVisible, setSearchVisible] = useState(false);
-  const [selectedEx, setSelectedEx]       = useState(null);
+  const [activeDay, setActiveDay]           = useState(defaultDay.index);
+  const [searchVisible, setSearchVisible]   = useState(false);
+  const [selectedEx, setSelectedEx]         = useState(null);
   const [summaryVisible, setSummaryVisible] = useState(false);
   const [copyVisible, setCopyVisible]       = useState(false);
   const [removeTarget, setRemoveTarget]     = useState(null);
-  const [plan, setPlan]                   = useWorkouts();
-  const [logs, setLogs]                   = useWorkoutLogs();
+  const [plan, setPlan]                     = useWorkouts();
+  const [logs, setLogs]                     = useWorkoutLogs();
 
-  const today     = new Date().toISOString().split('T')[0];
-  const exercises = plan[activeDay] ?? [];
+  const exercises = useMemo(() => plan[activeDay] ?? [], [plan, activeDay]);
+  const todayLog  = useMemo(() => logs[today] ?? {}, [logs]);
+  const otherDays = useMemo(() => TRAINING_DAYS.filter(d => d.index !== activeDay), [activeDay]);
 
-  // Volume for today
-  const todayLog     = logs[today] ?? {};
-  const totalSetsToday  = exercises.reduce((sum, ex) => sum + (todayLog[ex.id]?.length ?? 0), 0);
-  const totalVolumeToday = exercises.reduce((sum, ex) => {
-    const sets = todayLog[ex.id] ?? [];
-    return sum + sets.reduce((s, set) => s + set.weight * set.reps, 0);
-  }, 0);
+  // Volume stats — only recomputed when exercises or todayLog change
+  const { totalSetsToday, totalVolumeToday } = useMemo(() => {
+    let sets = 0, volume = 0;
+    exercises.forEach(ex => {
+      const exSets = todayLog[ex.id] ?? [];
+      sets += exSets.length;
+      volume += exSets.reduce((s, set) => s + set.weight * set.reps, 0);
+    });
+    return { totalSetsToday: sets, totalVolumeToday: volume };
+  }, [exercises, todayLog]);
+
+  // Previous sessions per exercise — computed once per logs change, cached by exId
+  const previousSessionsMap = useMemo(() => {
+    const map = {};
+    const pastDates = Object.entries(logs).filter(([date]) => date !== today);
+    // collect all exercise ids across all days
+    const allExIds = new Set(Object.values(plan).flat().map(e => e.id));
+    allExIds.forEach(exId => {
+      map[exId] = pastDates
+        .map(([date, dayLog]) => {
+          const sets = dayLog[exId];
+          if (!sets?.length) return null;
+          return { date, sets: sets.length, maxWeight: Math.max(...sets.map(s => s.weight)) };
+        })
+        .filter(Boolean)
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 8);
+    });
+    return map;
+  }, [logs, plan]);
+
   const hasLoggedToday = totalSetsToday > 0;
 
-  const addExercise = (ex) => {
+  const addExercise = useCallback((ex) => {
     setPlan(prev => ({
       ...prev,
       [activeDay]: [...(prev[activeDay] ?? []), ex],
     }));
-  };
+  }, [activeDay, setPlan]);
 
-  const removeExercise = (exId) => setRemoveTarget(exId);
+  const removeExercise = useCallback((exId) => setRemoveTarget(exId), []);
 
-  const confirmRemove = () => {
+  const confirmRemove = useCallback(() => {
     setPlan(prev => ({
       ...prev,
       [activeDay]: (prev[activeDay] ?? []).filter(e => e.id !== removeTarget),
     }));
     setRemoveTarget(null);
-  };
+  }, [activeDay, removeTarget, setPlan]);
 
-  const copyPlanToDay = (targetDayIndex) => {
+  const copyPlanToDay = useCallback((targetDayIndex) => {
     const currentExercises = plan[activeDay] ?? [];
     const targetExercises  = plan[targetDayIndex] ?? [];
     const existingIds = new Set(targetExercises.map(e => e.id));
-    const toAdd = currentExercises.filter(e => !existingIds.has(e.id));
     setPlan(prev => ({
       ...prev,
-      [targetDayIndex]: [...targetExercises, ...toAdd],
+      [targetDayIndex]: [...targetExercises, ...currentExercises.filter(e => !existingIds.has(e.id))],
     }));
     setCopyVisible(false);
-  };
+  }, [activeDay, plan, setPlan]);
 
-  const getSets = (exId) => logs[today]?.[exId] ?? [];
+  const getSets = useCallback((exId) => todayLog[exId] ?? [], [todayLog]);
 
-  const getPreviousSessions = (exId) => {
-    return Object.entries(logs)
-      .filter(([date]) => date !== today)
-      .map(([date, dayLog]) => {
-        const sets = dayLog[exId];
-        if (!sets || sets.length === 0) return null;
-        return {
-          date,
-          sets:      sets.length,
-          maxWeight: Math.max(...sets.map(s => s.weight)),
-        };
-      })
-      .filter(Boolean)
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, 8);
-  };
-
-  const getLastSession = (exId) => getPreviousSessions(exId)[0] ?? null;
-
-  const addSet = (exId, set) => {
+  const addSet = useCallback((exId, set) => {
     setLogs(prev => ({
       ...prev,
       [today]: {
@@ -100,17 +107,20 @@ export default function TrainingScreen() {
         [exId]: [...(prev[today]?.[exId] ?? []), set],
       },
     }));
-  };
+  }, [setLogs]);
 
-  const removeSet = (exId, index) => {
+  const removeSet = useCallback((exId, index) => {
     setLogs(prev => {
       const sets = [...(prev[today]?.[exId] ?? [])];
       sets.splice(index, 1);
       return { ...prev, [today]: { ...(prev[today] ?? {}), [exId]: sets } };
     });
-  };
+  }, [setLogs]);
 
-  const otherDays = TRAINING_DAYS.filter(d => d.index !== activeDay);
+  const activeDayName = useMemo(
+    () => TRAINING_DAYS.find(d => d.index === activeDay)?.name,
+    [activeDay]
+  );
 
   return (
     <View style={s.root}>
@@ -166,20 +176,17 @@ export default function TrainingScreen() {
             </View>
           ) : (
             exercises.map((ex, i) => {
-              const todaySets      = getSets(ex.id);
-              const lastSesh       = getLastSession(ex.id);
-              const hasLogged      = todaySets.length > 0;
+              const todaySets = getSets(ex.id);
+              const lastSesh  = previousSessionsMap[ex.id]?.[0] ?? null;
+              const hasLogged = todaySets.length > 0;
 
               return (
                 <SwipeableCard
-                  key={i}
+                  key={ex.id ?? i}
                   style={[s.exCard, hasLogged && s.exCardActive]}
                   onSwipe={() => removeExercise(ex.id)}
                 >
-                  <TouchableOpacity
-                    onPress={() => setSelectedEx(ex)}
-                    activeOpacity={0.7}
-                  >
+                  <TouchableOpacity onPress={() => setSelectedEx(ex)} activeOpacity={0.7}>
                     <View style={s.exCardTop}>
                       <View style={s.exCardLeft}>
                         <Text style={s.exName}>{ex.name}</Text>
@@ -226,7 +233,7 @@ export default function TrainingScreen() {
         <View style={s.copyOverlay}>
           <View style={s.copyDialog}>
             <Text style={s.copyTitle}>Remove Exercise?</Text>
-            <Text style={s.copySubtitle}>This will remove it from {TRAINING_DAYS.find(d => d.index === activeDay)?.name}</Text>
+            <Text style={s.copySubtitle}>This will remove it from {activeDayName}</Text>
             <View style={s.dialogBtns}>
               <TouchableOpacity style={s.dialogCancel} onPress={() => setRemoveTarget(null)} activeOpacity={0.7}>
                 <Text style={s.dialogCancelText}>Cancel</Text>
@@ -245,7 +252,7 @@ export default function TrainingScreen() {
           <View style={s.copyDialog}>
             <Text style={s.copyTitle}>Copy to which day?</Text>
             <Text style={s.copySubtitle}>
-              Copies {exercises.length} exercise{exercises.length !== 1 ? 's' : ''} from {TRAINING_DAYS.find(d => d.index === activeDay)?.name}
+              Copies {exercises.length} exercise{exercises.length !== 1 ? 's' : ''} from {activeDayName}
             </Text>
             <View style={s.copyDayList}>
               {otherDays.map(d => (
@@ -262,28 +269,34 @@ export default function TrainingScreen() {
         </View>
       </Modal>
 
-      <ExerciseSearchModal
-        visible={searchVisible}
-        onClose={() => setSearchVisible(false)}
-        onAdd={addExercise}
-      />
-      <LogSetModal
-        visible={!!selectedEx}
-        exercise={selectedEx}
-        date={today}
-        sets={selectedEx ? getSets(selectedEx.id) : []}
-        previousSessions={selectedEx ? getPreviousSessions(selectedEx.id) : []}
-        onAdd={(set) => addSet(selectedEx.id, set)}
-        onRemove={(i) => removeSet(selectedEx.id, i)}
-        onClose={() => setSelectedEx(null)}
-      />
-      <SessionSummaryModal
-        visible={summaryVisible}
-        onClose={() => setSummaryVisible(false)}
-        exercises={exercises}
-        logs={logs}
-        date={today}
-      />
+      {searchVisible && (
+        <ExerciseSearchModal
+          visible={searchVisible}
+          onClose={() => setSearchVisible(false)}
+          onAdd={addExercise}
+        />
+      )}
+      {selectedEx && (
+        <LogSetModal
+          visible={!!selectedEx}
+          exercise={selectedEx}
+          date={today}
+          sets={getSets(selectedEx.id)}
+          previousSessions={previousSessionsMap[selectedEx.id] ?? []}
+          onAdd={(set) => addSet(selectedEx.id, set)}
+          onRemove={(i) => removeSet(selectedEx.id, i)}
+          onClose={() => setSelectedEx(null)}
+        />
+      )}
+      {summaryVisible && (
+        <SessionSummaryModal
+          visible={summaryVisible}
+          onClose={() => setSummaryVisible(false)}
+          exercises={exercises}
+          logs={logs}
+          date={today}
+        />
+      )}
     </View>
   );
 }
@@ -497,7 +510,6 @@ const s = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // Copy modal
   copyOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.75)',
