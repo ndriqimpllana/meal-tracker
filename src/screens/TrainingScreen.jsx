@@ -137,8 +137,8 @@ export default function TrainingScreen() {
               <Text style={s.title}>Your workouts</Text>
             </View>
             <View style={s.headerBtns}>
-              <TouchableOpacity style={s.headerBtn} onPress={() => setHistoryVisible(true)} activeOpacity={0.7}>
-                <Text style={s.headerBtnText}>History</Text>
+              <TouchableOpacity style={[s.headerBtn, s.headerBtnHistory]} onPress={() => setHistoryVisible(true)} activeOpacity={0.7}>
+                <Text style={[s.headerBtnText, s.headerBtnHistoryText]}>History</Text>
               </TouchableOpacity>
               {exercises.length > 0 && (
                 <TouchableOpacity style={s.headerBtn} onPress={() => setCopyVisible(true)} activeOpacity={0.7}>
@@ -180,7 +180,7 @@ export default function TrainingScreen() {
           {exercises.length === 0 ? (
             <View style={s.empty}>
               <Text style={s.emptyText}>No exercises added yet</Text>
-              <Text style={s.emptySubText}>Tap + to add exercises to this day</Text>
+              <Text style={s.emptySubText}>Tap the button to get started</Text>
             </View>
           ) : (
             exercises.map((ex, i) => {
@@ -224,17 +224,28 @@ export default function TrainingScreen() {
 
       </ScrollView>
 
-      {/* Bottom buttons */}
-      <View style={s.bottomBtns}>
-        {totalSetsToday > 0 && (
-          <TouchableOpacity style={s.finishBtn} onPress={() => setSummaryVisible(true)} activeOpacity={0.8}>
-            <Text style={s.finishBtnText}>Finish Workout</Text>
+      {/* Centered add button — only when no exercises */}
+      {exercises.length === 0 && (
+        <View style={s.centerBtnWrap} pointerEvents="box-none">
+          <TouchableOpacity style={s.addBtn} onPress={() => setSearchVisible(true)} activeOpacity={0.8}>
+            <Text style={s.addBtnText}>+ Add Exercise</Text>
           </TouchableOpacity>
-        )}
-        <TouchableOpacity style={s.addBtn} onPress={() => setSearchVisible(true)} activeOpacity={0.8}>
-          <Text style={s.addBtnText}>+ Add Exercise</Text>
-        </TouchableOpacity>
-      </View>
+        </View>
+      )}
+
+      {/* Bottom buttons — only when exercises exist */}
+      {exercises.length > 0 && (
+        <View style={s.bottomBtns}>
+          {totalSetsToday > 0 && (
+            <TouchableOpacity style={s.finishBtn} onPress={() => setSummaryVisible(true)} activeOpacity={0.8}>
+              <Text style={s.finishBtnText}>Finish Workout</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={s.addBtn} onPress={() => setSearchVisible(true)} activeOpacity={0.8}>
+            <Text style={s.addBtnText}>+ Add Exercise</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Remove exercise modal */}
       <Modal visible={!!removeTarget} transparent animationType="fade">
@@ -327,6 +338,11 @@ export default function TrainingScreen() {
         visible={historyVisible}
         onClose={() => setHistoryVisible(false)}
         completedWorkouts={completedWorkouts}
+        onDelete={(date) => setCompletedWorkouts(prev => {
+          const next = { ...prev };
+          delete next[date];
+          return next;
+        })}
       />
     </View>
   );
@@ -371,6 +387,18 @@ const s = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 4,
     marginTop: 4,
+  },
+  headerBtnHistory: {
+    backgroundColor: '#ffffff',
+    borderColor: '#ffffff',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  headerBtnHistoryText: {
+    fontSize: 12,
+    color: '#000000',
+    fontWeight: '700',
   },
   headerBtnText: {
     fontFamily: 'monospace',
@@ -425,8 +453,9 @@ const s = StyleSheet.create({
 
   exerciseList: { gap: 10 },
   empty: {
-    paddingVertical: 40,
+    height: 340,
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
   },
   emptyText: {
@@ -438,6 +467,14 @@ const s = StyleSheet.create({
     color: '#536080',
     fontFamily: 'monospace',
     fontSize: 11,
+  },
+  centerBtnWrap: {
+    position: 'absolute',
+    top: 0,
+    left: 16,
+    right: 16,
+    bottom: 0,
+    justifyContent: 'center',
   },
 
   exCard: {
@@ -544,91 +581,96 @@ const s = StyleSheet.create({
 
   copyOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   copyDialog: {
-    width: 300,
-    backgroundColor: '#131929',
-    borderWidth: 1,
-    borderColor: '#253048',
-    borderRadius: 12,
-    padding: 20,
+    width: 310,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 12,
   },
   copyTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#e8edf5',
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#0a0a0a',
     marginBottom: 4,
   },
   copySubtitle: {
     fontFamily: 'monospace',
-    fontSize: 10,
-    color: '#536080',
-    marginBottom: 16,
+    fontSize: 11,
+    color: '#888888',
+    marginBottom: 20,
   },
   copyDayList: { gap: 8, marginBottom: 12 },
   copyDayBtn: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#253048',
-    borderRadius: 8,
-    backgroundColor: '#1b2438',
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#e8e8e8',
+    borderRadius: 10,
+    backgroundColor: '#f7f9ff',
   },
   copyDayText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#e8edf5',
+    color: '#0a0a0a',
   },
   copyDayCount: {
     fontFamily: 'monospace',
-    fontSize: 10,
-    color: '#536080',
+    fontSize: 11,
+    color: '#888888',
   },
   copyCancelBtn: {
-    paddingVertical: 10,
+    paddingVertical: 13,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#253048',
-    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#e0e0e0',
+    borderRadius: 10,
+    backgroundColor: '#f7f7f7',
   },
   copyCancelText: {
     fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#536080',
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#555555',
   },
 
   dialogBtns: { flexDirection: 'row', gap: 10 },
   dialogCancel: {
     flex: 1,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#253048',
-    borderRadius: 6,
+    paddingVertical: 14,
+    borderWidth: 1.5,
+    borderColor: '#e0e0e0',
+    borderRadius: 10,
     alignItems: 'center',
+    backgroundColor: '#f7f7f7',
   },
   dialogCancelText: {
     fontFamily: 'monospace',
-    fontSize: 12,
-    color: '#536080',
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#555555',
   },
   dialogRemove: {
     flex: 1,
-    paddingVertical: 10,
-    backgroundColor: '#1a0e1a',
-    borderWidth: 1,
-    borderColor: '#f8717155',
-    borderRadius: 6,
+    paddingVertical: 14,
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
     alignItems: 'center',
   },
   dialogRemoveText: {
     fontFamily: 'monospace',
-    fontSize: 12,
-    color: '#f87171',
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#ffffff',
   },
 });

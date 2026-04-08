@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity,
   FlatList, StyleSheet, Modal, ActivityIndicator, ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ACCENT = '#4ade80';
 
@@ -17,447 +18,436 @@ const CATEGORIES = [
 ];
 
 export default function ExerciseSearchModal({ visible, onClose, onAdd }) {
-  const [query, setQuery]                   = useState('');
-  const [results, setResults]               = useState([]);
-  const [loading, setLoading]               = useState(false);
-  const [error, setError]                   = useState(null);
-  const [activeCategory, setActiveCategory] = useState(null);
-  const [mode, setMode]                     = useState('search'); // 'search' | 'custom'
+  const [query, setQuery]                     = useState('');
+  const [results, setResults]                 = useState([]);
+  const [loading, setLoading]                 = useState(false);
+  const [error, setError]                     = useState(null);
+  const [activeCategory, setActiveCategory]   = useState(null);
+  const [mode, setMode]                       = useState('search');
 
-  // Custom exercise fields
-  const [customName, setCustomName]         = useState('');
-  const [customCategory, setCustomCategory] = useState('');
+  const [customName, setCustomName]           = useState('');
+  const [customCategory, setCustomCategory]   = useState('');
   const [customEquipment, setCustomEquipment] = useState('');
 
   const reset = () => {
-    setQuery('');
-    setResults([]);
-    setError(null);
-    setActiveCategory(null);
-    setMode('search');
-    setCustomName('');
-    setCustomCategory('');
-    setCustomEquipment('');
+    setQuery(''); setResults([]); setError(null); setActiveCategory(null);
+    setMode('search'); setCustomName(''); setCustomCategory(''); setCustomEquipment('');
   };
 
   const searchByText = async (term) => {
     if (!term.trim()) return;
-    setLoading(true);
-    setError(null);
-    setActiveCategory(null);
+    setLoading(true); setError(null); setActiveCategory(null);
     try {
-      const res  = await fetch(
-        `https://wger.de/api/v2/exercise/search/?term=${encodeURIComponent(term)}&language=english&format=json`
-      );
+      const res  = await fetch(`https://wger.de/api/v2/exercise/search/?term=${encodeURIComponent(term)}&language=english&format=json`);
       const data = await res.json();
       setResults((data.suggestions ?? []).map(item => ({
-        id:        item.data.base_id,
-        name:      item.value,
-        category:  item.data.category,
+        id: item.data.base_id, name: item.value,
+        category: item.data.category,
         equipment: item.data.equipment?.join(', ') || 'None',
       })));
-    } catch {
-      setError('Could not connect. Check your internet.');
-    } finally {
-      setLoading(false);
-    }
+    } catch { setError('Could not connect. Check your internet.'); }
+    finally { setLoading(false); }
   };
 
   const searchByCategory = async (cat) => {
-    setActiveCategory(cat.id);
-    setQuery('');
-    setLoading(true);
-    setError(null);
+    setActiveCategory(cat.id); setQuery(''); setLoading(true); setError(null);
     try {
-      const res  = await fetch(
-        `https://wger.de/api/v2/exerciseinfo/?format=json&language=2&category=${cat.id}&limit=30`
-      );
+      const res  = await fetch(`https://wger.de/api/v2/exerciseinfo/?format=json&language=2&category=${cat.id}&limit=30`);
       const data = await res.json();
-      const exercises = (data.results ?? []).map(item => {
+      setResults((data.results ?? []).map(item => {
         const en = item.translations?.find(t => t.language === 2);
         if (!en?.name) return null;
-        return {
-          id:        item.id,
-          name:      en.name,
-          category:  item.category?.name ?? cat.label,
-          equipment: item.equipment?.map(e => e.name).join(', ') || 'None',
-        };
-      }).filter(Boolean);
-      setResults(exercises);
-    } catch {
-      setError('Could not connect. Check your internet.');
-    } finally {
-      setLoading(false);
-    }
+        return { id: item.id, name: en.name, category: item.category?.name ?? cat.label, equipment: item.equipment?.map(e => e.name).join(', ') || 'None' };
+      }).filter(Boolean));
+    } catch { setError('Could not connect. Check your internet.'); }
+    finally { setLoading(false); }
   };
 
-  const handleAdd = (item) => {
-    onAdd(item);
-    onClose();
-    reset();
-  };
-
+  const handleAdd = (item) => { onAdd(item); onClose(); reset(); };
   const handleAddCustom = () => {
     if (!customName.trim()) return;
-    onAdd({
-      id:        `custom_${Date.now()}`,
-      name:      customName.trim(),
-      category:  customCategory.trim() || 'Custom',
-      equipment: customEquipment.trim() || 'None',
-    });
-    onClose();
-    reset();
+    onAdd({ id: `custom_${Date.now()}`, name: customName.trim(), category: customCategory.trim() || 'Custom', equipment: customEquipment.trim() || 'None' });
+    onClose(); reset();
   };
-
-  const handleClose = () => {
-    onClose();
-    reset();
-  };
+  const handleClose = () => { onClose(); reset(); };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View style={s.overlay}>
-        <View style={s.sheet}>
+    <Modal visible={visible} animationType="slide" transparent={false}>
+      <SafeAreaView style={s.root}>
 
-          {/* Header */}
-          <View style={s.sheetHeader}>
-            <Text style={s.sheetTitle}>Add Exercise</Text>
-            <TouchableOpacity onPress={handleClose} activeOpacity={0.7} style={s.closeBtnWrap}>
-              <Text style={s.closeBtn}>✕ Close</Text>
-            </TouchableOpacity>
+        {/* Header */}
+        <View style={s.header}>
+          <View>
+            <Text style={s.headerLabel}>EXERCISES</Text>
+            <Text style={s.headerTitle}>Add Exercise</Text>
           </View>
+          <TouchableOpacity onPress={handleClose} activeOpacity={0.7} style={s.closeBtnWrap}>
+            <Text style={s.closeBtn}>✕ Close</Text>
+          </TouchableOpacity>
+        </View>
 
-          {/* Mode toggle */}
-          <View style={s.modeRow}>
-            <TouchableOpacity
-              style={[s.modeBtn, mode === 'search' && s.modeBtnActive]}
-              onPress={() => setMode('search')}
-              activeOpacity={0.7}
-            >
-              <Text style={[s.modeBtnText, mode === 'search' && s.modeBtnTextActive]}>Search</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[s.modeBtn, mode === 'custom' && s.modeBtnActive]}
-              onPress={() => setMode('custom')}
-              activeOpacity={0.7}
-            >
-              <Text style={[s.modeBtnText, mode === 'custom' && s.modeBtnTextActive]}>Custom</Text>
-            </TouchableOpacity>
-          </View>
+        {/* Mode toggle */}
+        <View style={s.modeRow}>
+          <TouchableOpacity
+            style={[s.modeBtn, mode === 'search' && s.modeBtnActive]}
+            onPress={() => setMode('search')} activeOpacity={0.7}
+          >
+            <Text style={[s.modeBtnText, mode === 'search' && s.modeBtnTextActive]}>Search</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[s.modeBtn, mode === 'custom' && s.modeBtnActive]}
+            onPress={() => setMode('custom')} activeOpacity={0.7}
+          >
+            <Text style={[s.modeBtnText, mode === 'custom' && s.modeBtnTextActive]}>Custom</Text>
+          </TouchableOpacity>
+        </View>
 
-          {mode === 'search' ? (
-            <>
-              {/* Text search */}
-              <View style={s.searchRow}>
-                <TextInput
-                  style={s.input}
-                  placeholder="Search by name..."
-                  placeholderTextColor="#3d4f6b"
-                  value={query}
-                  onChangeText={setQuery}
-                  onSubmitEditing={() => searchByText(query)}
-                  returnKeyType="search"
-                  autoFocus
-                />
-                <TouchableOpacity style={s.searchBtn} onPress={() => searchByText(query)} activeOpacity={0.7}>
-                  <Text style={s.searchBtnText}>Search</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Muscle group chips */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={s.chips}
-                style={s.chipsScroll}
-              >
-                {CATEGORIES.map(cat => (
-                  <TouchableOpacity
-                    key={cat.id}
-                    style={[s.chip, activeCategory === cat.id && s.chipActive]}
-                    onPress={() => activeCategory === cat.id ? (setActiveCategory(null), setResults([])) : searchByCategory(cat)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[s.chipText, activeCategory === cat.id && s.chipTextActive]}>
-                      {cat.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              {loading && <ActivityIndicator color={ACCENT} style={s.loader} />}
-              {error   && <Text style={s.error}>{error}</Text>}
-
-              <FlatList
-                data={results}
-                keyExtractor={(_, i) => String(i)}
-                renderItem={({ item }) => (
-                  <TouchableOpacity style={s.result} onPress={() => handleAdd(item)} activeOpacity={0.7}>
-                    <Text style={s.resultName}>{item.name}</Text>
-                    <Text style={s.resultMeta}>{item.category} · {item.equipment}</Text>
-                  </TouchableOpacity>
-                )}
-                ItemSeparatorComponent={() => <View style={s.separator} />}
-                ListEmptyComponent={
-                  !loading && (query.length > 0 || activeCategory) ? (
-                    <Text style={s.noResults}>No results — try a different term</Text>
-                  ) : null
-                }
+        {mode === 'search' ? (
+          <View style={s.searchPane}>
+            {/* Search input */}
+            <View style={s.searchRow}>
+              <TextInput
+                style={s.input}
+                placeholder="Search by name..."
+                placeholderTextColor="#aaaaaa"
+                value={query}
+                onChangeText={setQuery}
+                onSubmitEditing={() => searchByText(query)}
+                returnKeyType="search"
+                autoFocus
               />
-            </>
-          ) : (
-            /* Custom exercise form */
-            <View style={s.customForm}>
-              <Text style={s.customHint}>Can't find it? Create your own exercise.</Text>
-
-              <View style={s.customField}>
-                <Text style={s.customLabel}>EXERCISE NAME *</Text>
-                <TextInput
-                  style={s.customInput}
-                  placeholder="e.g. Cable Face Pull"
-                  placeholderTextColor="#3d4f6b"
-                  value={customName}
-                  onChangeText={setCustomName}
-                  autoFocus
-                />
-              </View>
-
-              <View style={s.customField}>
-                <Text style={s.customLabel}>MUSCLE GROUP</Text>
-                <TextInput
-                  style={s.customInput}
-                  placeholder="e.g. Shoulders"
-                  placeholderTextColor="#3d4f6b"
-                  value={customCategory}
-                  onChangeText={setCustomCategory}
-                />
-              </View>
-
-              <View style={s.customField}>
-                <Text style={s.customLabel}>EQUIPMENT</Text>
-                <TextInput
-                  style={s.customInput}
-                  placeholder="e.g. Cable Machine"
-                  placeholderTextColor="#3d4f6b"
-                  value={customEquipment}
-                  onChangeText={setCustomEquipment}
-                />
-              </View>
-
-              <TouchableOpacity
-                style={[s.customAddBtn, !customName.trim() && s.customAddBtnDisabled]}
-                onPress={handleAddCustom}
-                activeOpacity={0.7}
-              >
-                <Text style={s.customAddBtnText}>Add Custom Exercise</Text>
+              <TouchableOpacity style={s.searchBtn} onPress={() => searchByText(query)} activeOpacity={0.7}>
+                <Text style={s.searchBtnText}>Search</Text>
               </TouchableOpacity>
             </View>
-          )}
 
-        </View>
-      </View>
+            {/* Muscle group chips */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={s.chips}
+              style={s.chipsScroll}
+            >
+              {CATEGORIES.map(cat => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[s.chip, activeCategory === cat.id && s.chipActive]}
+                  onPress={() => activeCategory === cat.id ? (setActiveCategory(null), setResults([])) : searchByCategory(cat)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[s.chipText, activeCategory === cat.id && s.chipTextActive]}>
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {loading && <ActivityIndicator color="#000000" style={s.loader} />}
+            {error   && <Text style={s.error}>{error}</Text>}
+
+            <FlatList
+              data={results}
+              keyExtractor={(_, i) => String(i)}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={s.result} onPress={() => handleAdd(item)} activeOpacity={0.7}>
+                  <View style={s.resultInner}>
+                    <View style={s.resultLeft}>
+                      <Text style={s.resultName}>{item.name}</Text>
+                      <Text style={s.resultMeta}>{item.category} · {item.equipment}</Text>
+                    </View>
+                    <Text style={s.resultAdd}>+ Add</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+              ItemSeparatorComponent={() => <View style={s.separator} />}
+              ListEmptyComponent={
+                !loading && (query.length > 0 || activeCategory) ? (
+                  <Text style={s.noResults}>No results — try a different term</Text>
+                ) : null
+              }
+            />
+          </View>
+        ) : (
+          /* Custom exercise form */
+          <ScrollView style={s.customScroll} contentContainerStyle={s.customForm}>
+            <Text style={s.customHint}>Can't find it? Create your own exercise.</Text>
+
+            <View style={s.customField}>
+              <Text style={s.customLabel}>EXERCISE NAME *</Text>
+              <TextInput
+                style={s.customInput}
+                placeholder="e.g. Cable Face Pull"
+                placeholderTextColor="#aaaaaa"
+                value={customName}
+                onChangeText={setCustomName}
+                autoFocus
+              />
+            </View>
+
+            <View style={s.customField}>
+              <Text style={s.customLabel}>MUSCLE GROUP</Text>
+              <TextInput
+                style={s.customInput}
+                placeholder="e.g. Shoulders"
+                placeholderTextColor="#aaaaaa"
+                value={customCategory}
+                onChangeText={setCustomCategory}
+              />
+            </View>
+
+            <View style={s.customField}>
+              <Text style={s.customLabel}>EQUIPMENT</Text>
+              <TextInput
+                style={s.customInput}
+                placeholder="e.g. Cable Machine"
+                placeholderTextColor="#aaaaaa"
+                value={customEquipment}
+                onChangeText={setCustomEquipment}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[s.customAddBtn, !customName.trim() && s.customAddBtnDisabled]}
+              onPress={handleAddCustom}
+              activeOpacity={0.7}
+            >
+              <Text style={[s.customAddBtnText, !customName.trim() && s.customAddBtnTextDisabled]}>
+                Add Custom Exercise
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        )}
+
+      </SafeAreaView>
     </Modal>
   );
 }
 
 const s = StyleSheet.create({
-  overlay: {
+  root: {
     flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: '#ffffff',
   },
-  sheet: {
-    backgroundColor: '#131929',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    borderWidth: 1,
-    borderColor: '#253048',
-    padding: 16,
-    maxHeight: '85%',
-  },
-  sheetHeader: {
+
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14,
+    alignItems: 'flex-start',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eeeeee',
   },
-  sheetTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#e8edf5',
+  headerLabel: {
+    fontFamily: 'monospace',
+    fontSize: 10,
+    color: ACCENT,
+    letterSpacing: 2,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  headerTitle: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#0a0a0a',
   },
   closeBtnWrap: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#f8717155',
-    backgroundColor: '#1a0e0e',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#fca5a5',
+    backgroundColor: '#fff5f5',
+    marginTop: 4,
   },
   closeBtn: {
     fontFamily: 'monospace',
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#f87171',
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#ef4444',
   },
 
   modeRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 14,
+    gap: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eeeeee',
   },
   modeBtn: {
     flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#253048',
+    paddingVertical: 11,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#e0e0e0',
     alignItems: 'center',
-    backgroundColor: '#0b0f1a',
+    backgroundColor: '#f7f7f7',
   },
   modeBtnActive: {
-    backgroundColor: '#ffffff',
-    borderColor: '#ffffff',
+    backgroundColor: '#0a0a0a',
+    borderColor: '#0a0a0a',
   },
   modeBtnText: {
     fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#536080',
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#888888',
   },
   modeBtnTextActive: {
-    color: '#000000',
-    fontWeight: '600',
+    color: '#ffffff',
   },
 
+  searchPane: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+  },
   searchRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
+    gap: 10,
+    marginBottom: 14,
   },
   input: {
     flex: 1,
-    backgroundColor: '#0b0f1a',
-    borderWidth: 1,
-    borderColor: '#253048',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: '#e8edf5',
-    fontFamily: 'monospace',
-    fontSize: 12,
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1.5,
+    borderColor: '#e0e0e0',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: '#0a0a0a',
+    fontSize: 14,
   },
   searchBtn: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    paddingHorizontal: 14,
+    backgroundColor: '#0a0a0a',
+    borderRadius: 10,
+    paddingHorizontal: 18,
     justifyContent: 'center',
   },
   searchBtnText: {
     fontFamily: 'monospace',
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#ffffff',
   },
 
-  chipsScroll: { marginBottom: 14, height: 44 },
-  chips: { gap: 6, paddingRight: 4, alignItems: 'center' },
+  chipsScroll: { marginBottom: 14, height: 52 },
+  chips: { gap: 8, paddingRight: 4, alignItems: 'center' },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#253048',
-    backgroundColor: '#0b0f1a',
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#16a34a',
+    backgroundColor: '#f0fdf4',
   },
   chipActive: {
-    backgroundColor: ACCENT,
-    borderColor: ACCENT,
+    backgroundColor: '#16a34a',
+    borderColor: '#16a34a',
   },
   chipText: {
     fontFamily: 'monospace',
-    fontSize: 10,
-    color: '#536080',
-    letterSpacing: 0.3,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#16a34a',
+    letterSpacing: 0.2,
   },
   chipTextActive: {
-    color: '#000000',
-    fontWeight: '600',
+    color: '#ffffff',
   },
 
-  loader: { marginVertical: 20 },
+  loader: { marginVertical: 24 },
   error: {
-    color: '#f87171',
+    color: '#ef4444',
     fontFamily: 'monospace',
-    fontSize: 11,
+    fontSize: 12,
     marginBottom: 12,
   },
 
   result: {
-    paddingVertical: 12,
-    gap: 3,
+    paddingVertical: 2,
   },
+  resultInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  resultLeft: { flex: 1, gap: 3 },
   resultName: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#e8edf5',
+    color: '#0a0a0a',
   },
   resultMeta: {
     fontFamily: 'monospace',
-    fontSize: 10,
-    color: '#536080',
+    fontSize: 11,
+    color: '#888888',
+  },
+  resultAdd: {
+    fontFamily: 'monospace',
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#16a34a',
+    paddingLeft: 12,
   },
   separator: {
     height: 1,
-    backgroundColor: '#1c2640',
+    backgroundColor: '#f0f0f0',
   },
   noResults: {
     fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#536080',
+    fontSize: 12,
+    color: '#aaaaaa',
     textAlign: 'center',
-    paddingVertical: 20,
+    paddingVertical: 24,
   },
 
   // Custom form
-  customForm: { gap: 16 },
+  customScroll: { flex: 1 },
+  customForm: { gap: 20, padding: 20 },
   customHint: {
-    fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#536080',
+    fontSize: 13,
+    color: '#888888',
     marginBottom: 4,
   },
-  customField: { gap: 6 },
+  customField: { gap: 8 },
   customLabel: {
     fontFamily: 'monospace',
-    fontSize: 9,
-    color: '#536080',
-    letterSpacing: 0.8,
+    fontSize: 10,
+    color: '#888888',
+    letterSpacing: 1,
+    fontWeight: '700',
   },
   customInput: {
-    backgroundColor: '#0b0f1a',
-    borderWidth: 1,
-    borderColor: '#253048',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    color: '#e8edf5',
-    fontFamily: 'monospace',
-    fontSize: 13,
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1.5,
+    borderColor: '#e0e0e0',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    color: '#0a0a0a',
+    fontSize: 14,
   },
   customAddBtn: {
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    paddingVertical: 14,
+    backgroundColor: '#0a0a0a',
+    borderRadius: 12,
+    paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
   },
   customAddBtnDisabled: {
-    backgroundColor: '#253048',
+    backgroundColor: '#e0e0e0',
   },
   customAddBtnText: {
     fontFamily: 'monospace',
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  customAddBtnTextDisabled: {
+    color: '#aaaaaa',
   },
 });
