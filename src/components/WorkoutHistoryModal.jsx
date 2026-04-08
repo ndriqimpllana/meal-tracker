@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import {
   View, Text, TouchableOpacity,
-  StyleSheet, Modal, ScrollView, SafeAreaView,
+  StyleSheet, Modal, ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ACCENT = '#4ade80';
 

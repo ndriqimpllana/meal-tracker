@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { DAYS } from '../data/days';
 import { useStorage } from '../hooks/useStorage';
+import { useBodyWeight } from '../hooks/useBodyWeight';
 import DayNav from '../components/DayNav';
 import MealCard from '../components/MealCard';
 import BodyWeightModal from '../components/BodyWeightModal';
@@ -84,6 +85,12 @@ export default function MealScreen() {
   const todayIndex = dayMap[today];
   const todayStr   = localDateStr();
 
+  const [bodyWeightEntries]               = useBodyWeight();
+  const latestWeight = useMemo(() =>
+    [...bodyWeightEntries].sort((a, b) => b.date.localeCompare(a.date))[0] ?? null,
+    [bodyWeightEntries]
+  );
+
   const [activeDay, setActiveDay]         = useState(todayIndex);
   const [checked, setChecked]             = useStorage('mealChecked', {});
   const [waterLog, setWaterLog]           = useStorage('waterLog', {});
@@ -112,7 +119,6 @@ export default function MealScreen() {
   const dayPct  = Math.round((dayDone / day.meals.length) * 100);
 
   const macros = [
-    { val: String(day.cal),   lbl: 'Cal',     color: MACRO_COLORS.cal     },
     { val: `${day.protein}g`, lbl: 'Protein', color: MACRO_COLORS.protein },
     { val: `${day.carbs}g`,   lbl: 'Carbs',   color: MACRO_COLORS.carbs   },
     { val: `${day.fat}g`,     lbl: 'Fat',     color: MACRO_COLORS.fat     },
@@ -129,7 +135,7 @@ export default function MealScreen() {
             <View style={s.headerTop}>
               <View>
                 <Text style={s.appLabel}>Meal Plan</Text>
-                <Text style={s.title}>Your plan{'\n'}181 lbs · recomp</Text>
+                <Text style={s.title}>Your plan{latestWeight ? `\n${latestWeight.weight} lbs · recomp` : ''}</Text>
               </View>
               <View style={s.headerBtns}>
                 <TouchableOpacity style={[s.headerBtn, s.headerBtnLog]} onPress={() => setWeightVisible(true)} activeOpacity={0.75}>
@@ -180,7 +186,19 @@ export default function MealScreen() {
             </View>
           </View>
 
-          {/* Macro strip */}
+          {/* Calorie hero */}
+          <View style={[s.calHero, { borderColor: MACRO_COLORS.cal + '30', backgroundColor: MACRO_COLORS.cal + '0c' }]}>
+            <View style={s.calHeroLeft}>
+              <Text style={s.calHeroLabel}>DAILY CALORIES</Text>
+              <View style={s.calHeroValRow}>
+                <Text style={s.calHeroVal}>{day.cal}</Text>
+                <Text style={s.calHeroUnit}>kcal</Text>
+              </View>
+            </View>
+            <Text style={s.calHeroEmoji}>🔥</Text>
+          </View>
+
+          {/* Macro tiles */}
           <View style={s.macroStrip}>
             {macros.map(({ val, lbl, color }) => (
               <View key={lbl} style={[s.macroBox, { borderColor: color + '40', backgroundColor: color + '14' }]}>
@@ -336,14 +354,27 @@ const s = StyleSheet.create({
   badgeRest:      { backgroundColor: '#f5ece8', borderWidth: 1.5, borderColor: '#f0d0c4' },
   badgeRestText:  { color: '#c8a89c' },
 
+  // Calorie hero
+  calHero: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    borderWidth: 1.5, borderRadius: 16, padding: 18, marginBottom: 10,
+    shadowColor: '#f97316', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 2,
+  },
+  calHeroLeft:   { gap: 4 },
+  calHeroLabel:  { fontFamily: 'monospace', fontSize: 9, color: '#f97316', letterSpacing: 1.5, fontWeight: '700' },
+  calHeroValRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
+  calHeroVal:    { fontSize: 40, fontWeight: '800', color: '#2c1810', lineHeight: 44 },
+  calHeroUnit:   { fontFamily: 'monospace', fontSize: 14, color: '#c8a89c', marginBottom: 5 },
+  calHeroEmoji:  { fontSize: 44 },
+
   // Macros
   macroStrip: { flexDirection: 'row', gap: 6, marginBottom: 20 },
   macroBox: {
-    flex: 1, borderWidth: 1.5, borderRadius: 10, padding: 8, alignItems: 'center',
+    flex: 1, borderWidth: 1.5, borderRadius: 12, padding: 11, alignItems: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3,
   },
-  macroVal: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700' },
-  macroLbl: { fontSize: 8, color: '#9b7060', marginTop: 2, letterSpacing: 0.3, fontWeight: '600' },
+  macroVal: { fontFamily: 'monospace', fontSize: 14, fontWeight: '800' },
+  macroLbl: { fontSize: 9, color: '#9b7060', marginTop: 3, letterSpacing: 0.3, fontWeight: '600' },
 
   mealsList: { gap: 10, marginBottom: 16 },
 

@@ -1,59 +1,71 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
+const TABS = [
+  { id: 'meals',    label: 'Nutrition', icon: '🥗' },
+  { id: 'training', label: 'Training',  icon: '🏋️' },
+];
+
 export default function TabBar({ activeTab, onSelect }) {
   return (
-    <View style={s.bar}>
-      <TouchableOpacity
-        style={[s.tab, activeTab === 'training' && s.tabActive]}
-        onPress={() => onSelect('training')}
-        activeOpacity={0.75}
-      >
-        <Text style={[s.label, activeTab === 'training' && s.labelActive]}>Training</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[s.tab, activeTab === 'meals' && s.tabActive]}
-        onPress={() => onSelect('meals')}
-        activeOpacity={0.75}
-      >
-        <Text style={[s.label, activeTab === 'meals' && s.labelActive]}>Meal Plan</Text>
-      </TouchableOpacity>
+    <View style={s.wrapper}>
+      <View style={s.bar}>
+        {TABS.map(tab => {
+          const active = activeTab === tab.id;
+          return (
+            <TouchableOpacity
+              key={tab.id}
+              style={[s.tab, active && s.tabActive]}
+              onPress={() => onSelect(tab.id)}
+              activeOpacity={0.8}
+            >
+              <Text style={s.tabIcon}>{tab.icon}</Text>
+              <Text style={[s.label, active && s.labelActive]}>{tab.label}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  bar: {
-    flexDirection: 'row',
+  wrapper: {
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
-    borderTopColor: '#f5ddd4',
-    paddingBottom: 4,
-    paddingTop: 8,
+    borderTopColor: '#f0d0c4',
     paddingHorizontal: 16,
-    gap: 8,
+    paddingTop: 10,
+    paddingBottom: 6,
+    shadowColor: '#2c1810',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+  },
+  bar: {
+    flexDirection: 'row',
+    backgroundColor: '#f5ece8',
+    borderRadius: 16,
+    padding: 4,
+    gap: 4,
   },
   tab: {
     flex: 1,
-    paddingVertical: 11,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#f0d0c4',
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff8f4',
+    justifyContent: 'center',
+    paddingVertical: 13,
+    borderRadius: 13,
+    gap: 7,
   },
   tabActive: {
-    backgroundColor: '#2c1810',
-    borderColor: '#2c1810',
+    backgroundColor: '#1a0f0a',
+    shadowColor: '#1a0f0a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.22,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  label: {
-    fontFamily: 'monospace',
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#c8a89c',
-    letterSpacing: 0.3,
-  },
-  labelActive: {
-    color: '#ffffff',
-    fontWeight: '700',
-  },
+  tabIcon:     { fontSize: 17 },
+  label:       { fontSize: 13, fontWeight: '600', color: '#c8a89c', letterSpacing: 0.2 },
+  labelActive: { color: '#ffffff', fontWeight: '700' },
 });

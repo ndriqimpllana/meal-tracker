@@ -1,10 +1,20 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Modal, ScrollView,
+  StyleSheet, Modal, ScrollView, Linking,
 } from 'react-native';
 
 const ACCENT = '#16a34a';
+
+const MUSCLE_INFO = {
+  'Arms':      { emoji: '💪', color: '#f97316', muscles: 'Biceps · Triceps · Forearms' },
+  'Chest':     { emoji: '🔴', color: '#ef4444', muscles: 'Pec Major · Pec Minor' },
+  'Back':      { emoji: '🟣', color: '#8b5cf6', muscles: 'Lats · Rhomboids · Traps' },
+  'Legs':      { emoji: '🦵', color: '#06b6d4', muscles: 'Quads · Hamstrings · Glutes' },
+  'Shoulders': { emoji: '⚡', color: '#f59e0b', muscles: 'Front · Side · Rear Delts' },
+  'Abs':       { emoji: '🎯', color: '#16a34a', muscles: 'Rectus Abdominis · Obliques' },
+  'Calves':    { emoji: '🦶', color: '#3b82f6', muscles: 'Gastrocnemius · Soleus' },
+};
 
 export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, onClose, previousSessions }) {
   const [weight, setWeight]             = useState('');
@@ -33,8 +43,8 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
     fetch(`https://wger.de/api/v2/exerciseinfo/${exercise.id}/?format=json`)
       .then(r => r.json())
       .then(data => {
-        const en  = data.translations?.find(t => t.language === 2);
-        const raw = en?.description ?? '';
+        const en    = data.translations?.find(t => t.language === 2);
+        const raw   = en?.description ?? '';
         const clean = raw.replace(/<[^>]*>/g, '').trim();
         if (clean) setInstructions(clean);
       })
@@ -47,7 +57,17 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
     setTimer(90);
   };
 
+  const openTutorial = () => {
+    if (exercise?.name) {
+      Linking.openURL(
+        `https://www.youtube.com/results?search_query=${encodeURIComponent(exercise.name + ' exercise tutorial')}`
+      );
+    }
+  };
+
   const formatTimer = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+  const muscleInfo = exercise?.category ? MUSCLE_INFO[exercise.category] : null;
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -65,6 +85,24 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
                 <Text style={s.closeBtn}>✕ Close</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Muscle group card */}
+            {muscleInfo && (
+              <View style={[s.muscleCard, { borderColor: muscleInfo.color + '33', backgroundColor: muscleInfo.color + '0d' }]}>
+                <Text style={s.muscleEmoji}>{muscleInfo.emoji}</Text>
+                <View style={s.muscleMeta}>
+                  <Text style={[s.muscleName, { color: muscleInfo.color }]}>{exercise.category}</Text>
+                  <Text style={s.muscleMuscles}>{muscleInfo.muscles}</Text>
+                </View>
+                <TouchableOpacity
+                  style={[s.tutorialBtn, { borderColor: muscleInfo.color + '44', backgroundColor: muscleInfo.color + '15' }]}
+                  onPress={openTutorial}
+                  activeOpacity={0.75}
+                >
+                  <Text style={[s.tutorialBtnText, { color: muscleInfo.color }]}>▶ Tutorial</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Instructions toggle */}
             {instructions && (
@@ -125,7 +163,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
             ) : (
               <>
                 <View style={s.setsHeader}>
-                  {['SET','LBS','REPS',' '].map(h => <Text key={h} style={s.setsHeaderText}>{h}</Text>)}
+                  {['SET', 'LBS', 'REPS', ' '].map(h => <Text key={h} style={s.setsHeaderText}>{h}</Text>)}
                 </View>
                 {sets.map((item, index) => (
                   <View key={index} style={s.setRow}>
@@ -211,6 +249,17 @@ const s = StyleSheet.create({
   },
   closeBtn: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', color: '#ef4444' },
 
+  muscleCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderWidth: 1.5, borderRadius: 12, padding: 12, marginBottom: 14,
+  },
+  muscleEmoji:   { fontSize: 26 },
+  muscleMeta:    { flex: 1, gap: 2 },
+  muscleName:    { fontSize: 13, fontWeight: '700' },
+  muscleMuscles: { fontFamily: 'monospace', fontSize: 9, color: '#c8a89c', letterSpacing: 0.3 },
+  tutorialBtn:   { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7 },
+  tutorialBtnText: { fontFamily: 'monospace', fontSize: 11, fontWeight: '700', letterSpacing: 0.3 },
+
   instructionsToggle: {
     alignSelf: 'flex-start', marginBottom: 12, paddingHorizontal: 12, paddingVertical: 7,
     borderRadius: 8, borderWidth: 1.5, borderColor: ACCENT + '55', backgroundColor: '#f0fdf4',
@@ -227,11 +276,11 @@ const s = StyleSheet.create({
     backgroundColor: '#f0fdf4', borderWidth: 1.5, borderColor: ACCENT + '55',
     borderRadius: 12, padding: 12, marginBottom: 14,
   },
-  timerLeft:       { gap: 2 },
-  timerLabel:      { fontFamily: 'monospace', fontSize: 9, color: ACCENT, letterSpacing: 1, fontWeight: '700' },
-  timerCount:      { fontFamily: 'monospace', fontSize: 28, fontWeight: '700', color: ACCENT },
-  timerCountUrgent:{ color: '#ef4444' },
-  timerBtns:       { flexDirection: 'row', gap: 8 },
+  timerLeft:        { gap: 2 },
+  timerLabel:       { fontFamily: 'monospace', fontSize: 9, color: ACCENT, letterSpacing: 1, fontWeight: '700' },
+  timerCount:       { fontFamily: 'monospace', fontSize: 28, fontWeight: '700', color: ACCENT },
+  timerCountUrgent: { color: '#ef4444' },
+  timerBtns:        { flexDirection: 'row', gap: 8 },
   timerAdd: {
     borderWidth: 1.5, borderColor: ACCENT + '66', borderRadius: 8,
     paddingHorizontal: 12, paddingVertical: 7, backgroundColor: '#dcfce7',
@@ -243,7 +292,7 @@ const s = StyleSheet.create({
   },
   timerSkipText: { fontFamily: 'monospace', fontSize: 12, color: '#c8a89c', fontWeight: '600' },
 
-  inputRow: { flexDirection: 'row', gap: 8, marginBottom: 16, alignItems: 'flex-end' },
+  inputRow:   { flexDirection: 'row', gap: 8, marginBottom: 16, alignItems: 'flex-end' },
   inputGroup: { flex: 1, gap: 6 },
   inputLabel: { fontFamily: 'monospace', fontSize: 9, color: '#c8a89c', letterSpacing: 0.8, fontWeight: '700' },
   input: {
@@ -261,7 +310,7 @@ const s = StyleSheet.create({
   empty:     { paddingVertical: 24, alignItems: 'center' },
   emptyText: { fontFamily: 'monospace', fontSize: 11, color: '#d4b8b0' },
 
-  setsHeader: { flexDirection: 'row', marginBottom: 6, paddingHorizontal: 4 },
+  setsHeader:     { flexDirection: 'row', marginBottom: 6, paddingHorizontal: 4 },
   setsHeaderText: { flex: 1, fontFamily: 'monospace', fontSize: 9, color: '#d4b8b0', letterSpacing: 0.8, fontWeight: '700' },
   setRow: {
     flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 4,
@@ -274,11 +323,11 @@ const s = StyleSheet.create({
   chart: { marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#fdf0ea', marginBottom: 4 },
   chartLabel: { fontFamily: 'monospace', fontSize: 9, color: '#d4b8b0', letterSpacing: 1, marginBottom: 12, fontWeight: '700' },
   chartBars:  { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 80 },
-  chartBarWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 4 },
-  chartBarVal:  { fontFamily: 'monospace', fontSize: 8, color: ACCENT, fontWeight: '700' },
-  chartBarTrack:{ width: '100%', height: 56, justifyContent: 'flex-end' },
-  chartBar:     { width: '100%', backgroundColor: ACCENT + '55', borderRadius: 3, minHeight: 4 },
-  chartBarDate: { fontFamily: 'monospace', fontSize: 7, color: '#d4b8b0' },
+  chartBarWrap:  { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 4 },
+  chartBarVal:   { fontFamily: 'monospace', fontSize: 8, color: ACCENT, fontWeight: '700' },
+  chartBarTrack: { width: '100%', height: 56, justifyContent: 'flex-end' },
+  chartBar:      { width: '100%', backgroundColor: ACCENT + '55', borderRadius: 3, minHeight: 4 },
+  chartBarDate:  { fontFamily: 'monospace', fontSize: 7, color: '#d4b8b0' },
 
   historySection: { marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#fdf0ea' },
   historyLabel: { fontFamily: 'monospace', fontSize: 9, color: '#d4b8b0', letterSpacing: 1, marginBottom: 10, fontWeight: '700' },
