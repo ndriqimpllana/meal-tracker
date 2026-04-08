@@ -12,7 +12,7 @@ export default function App() {
   return (
     <View style={s.root}>
       <StatusBar barStyle={"light-content"} backgroundColor={"#000000"} />
-      <SafeAreaView style={s.safe} edges={['top']}>
+      <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
         {activeTab === 'meals' ? <MealScreen /> : <TrainingScreen />}
         <TabBar activeTab={activeTab} onSelect={setActiveTab} />
       </SafeAreaView>

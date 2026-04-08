@@ -52,10 +52,6 @@ export default function MealScreen() {
     setResetVisible(false);
   };
 
-  const totalMeals      = DAYS.reduce((s, d) => s + d.meals.length, 0);
-  const totalDone       = Object.values(checked).filter(Boolean).length;
-  const weekPct         = Math.round((totalDone / totalMeals) * 100);
-
   const day    = DAYS[activeDay];
   const dayDone = day.meals.filter((_, i) => checked[`${activeDay}-${i}`]).length;
   const dayPct  = Math.round((dayDone / day.meals.length) * 100);
@@ -79,14 +75,6 @@ export default function MealScreen() {
                   <Text style={s.headerBtnText}>Reset week</Text>
                 </TouchableOpacity>
               </View>
-            </View>
-
-            {/* Week progress */}
-            <View style={s.progressRow}>
-              <View style={s.progressBar}>
-                <View style={[s.progressFill, { width: `${weekPct}%` }]} />
-              </View>
-              <Text style={s.progressText}>{totalDone} / {totalMeals} meals</Text>
             </View>
 
             {/* Water tracker */}
@@ -243,30 +231,6 @@ const s = StyleSheet.create({
     fontSize: 10,
     color: '#666666',
     letterSpacing: 0.5,
-  },
-
-  progressRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 14,
-  },
-  progressBar: {
-    flex: 1,
-    height: 3,
-    backgroundColor: '#242424',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#ffffff',
-    borderRadius: 2,
-  },
-  progressText: {
-    fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#666666',
   },
 
   // Water tracker

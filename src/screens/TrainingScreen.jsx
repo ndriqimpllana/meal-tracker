@@ -1,9 +1,11 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { useWorkouts, useWorkoutLogs } from '../hooks/useWorkouts';
+import { useStorage } from '../hooks/useStorage';
 import ExerciseSearchModal from '../components/ExerciseSearchModal';
 import LogSetModal from '../components/LogSetModal';
 import SessionSummaryModal from '../components/SessionSummaryModal';
+import WorkoutHistoryModal from '../components/WorkoutHistoryModal';
 import SwipeableCard from '../components/SwipeableCard';
 
 const ACCENT = '#4ade80';
@@ -16,24 +18,26 @@ const TRAINING_DAYS = [
   { index: 5, short: 'SAT', name: 'Saturday' },
 ];
 
-// Computed once at module level — never changes
-const dayMap   = [6, 0, 1, 2, 3, 4, 5];
-const todayIndex = dayMap[new Date().getDay()];
-const today      = new Date().toISOString().split('T')[0];
-const defaultDay = TRAINING_DAYS.find(d => d.index === todayIndex) ?? TRAINING_DAYS[0];
-
 export default function TrainingScreen() {
-  const [activeDay, setActiveDay]           = useState(defaultDay.index);
-  const [searchVisible, setSearchVisible]   = useState(false);
-  const [selectedEx, setSelectedEx]         = useState(null);
-  const [summaryVisible, setSummaryVisible] = useState(false);
-  const [copyVisible, setCopyVisible]       = useState(false);
-  const [removeTarget, setRemoveTarget]     = useState(null);
-  const [plan, setPlan]                     = useWorkouts();
-  const [logs, setLogs]                     = useWorkoutLogs();
+  const dayMap     = [6, 0, 1, 2, 3, 4, 5];
+  const todayIndex = dayMap[new Date().getDay()];
+  const today      = new Date().toISOString().split('T')[0];
+  const defaultDay = TRAINING_DAYS.find(d => d.index === todayIndex) ?? TRAINING_DAYS[0];
+
+  const [activeDay, setActiveDay]                   = useState(defaultDay.index);
+  const [searchVisible, setSearchVisible]           = useState(false);
+  const [selectedEx, setSelectedEx]                 = useState(null);
+  const [summaryVisible, setSummaryVisible]         = useState(false);
+  const [copyVisible, setCopyVisible]               = useState(false);
+  const [removeTarget, setRemoveTarget]             = useState(null);
+  const [historyVisible, setHistoryVisible]         = useState(false);
+  const [plan, setPlan]                             = useWorkouts();
+  const [logs, setLogs]                             = useWorkoutLogs();
+  const [completedWorkouts, setCompletedWorkouts]   = useStorage('completedWorkouts', {});
+  const workoutStartRef                             = useRef(null);
 
   const exercises = useMemo(() => plan[activeDay] ?? [], [plan, activeDay]);
-  const todayLog  = useMemo(() => logs[today] ?? {}, [logs]);
+  const todayLog  = useMemo(() => logs[today] ?? {}, [logs, today]);
   const otherDays = useMemo(() => TRAINING_DAYS.filter(d => d.index !== activeDay), [activeDay]);
 
   // Volume stats — only recomputed when exercises or todayLog change
@@ -65,9 +69,7 @@ export default function TrainingScreen() {
         .slice(0, 8);
     });
     return map;
-  }, [logs, plan]);
-
-  const hasLoggedToday = totalSetsToday > 0;
+  }, [logs, plan, today]);
 
   const addExercise = useCallback((ex) => {
     setPlan(prev => ({
@@ -100,6 +102,7 @@ export default function TrainingScreen() {
   const getSets = useCallback((exId) => todayLog[exId] ?? [], [todayLog]);
 
   const addSet = useCallback((exId, set) => {
+    if (!workoutStartRef.current) workoutStartRef.current = Date.now();
     setLogs(prev => ({
       ...prev,
       [today]: {
@@ -107,7 +110,7 @@ export default function TrainingScreen() {
         [exId]: [...(prev[today]?.[exId] ?? []), set],
       },
     }));
-  }, [setLogs]);
+  }, [setLogs, today]);
 
   const removeSet = useCallback((exId, index) => {
     setLogs(prev => {
@@ -115,7 +118,7 @@ export default function TrainingScreen() {
       sets.splice(index, 1);
       return { ...prev, [today]: { ...(prev[today] ?? {}), [exId]: sets } };
     });
-  }, [setLogs]);
+  }, [setLogs, today]);
 
   const activeDayName = useMemo(
     () => TRAINING_DAYS.find(d => d.index === activeDay)?.name,
@@ -133,13 +136,18 @@ export default function TrainingScreen() {
               <Text style={s.appLabel}>Training</Text>
               <Text style={s.title}>Your workouts</Text>
             </View>
-            {exercises.length > 0 && (
-              <TouchableOpacity style={s.copyBtn} onPress={() => setCopyVisible(true)} activeOpacity={0.7}>
-                <Text style={s.copyBtnText}>Copy Plan</Text>
+            <View style={s.headerBtns}>
+              <TouchableOpacity style={s.headerBtn} onPress={() => setHistoryVisible(true)} activeOpacity={0.7}>
+                <Text style={s.headerBtnText}>History</Text>
               </TouchableOpacity>
-            )}
+              {exercises.length > 0 && (
+                <TouchableOpacity style={s.headerBtn} onPress={() => setCopyVisible(true)} activeOpacity={0.7}>
+                  <Text style={s.headerBtnText}>Copy Plan</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
-          {hasLoggedToday && (
+          {totalSetsToday > 0 && (
             <View style={s.volumeRow}>
               <Text style={s.volumeText}>
                 Today: <Text style={s.volumeAccent}>{totalVolumeToday.toLocaleString()} lbs</Text>
@@ -218,7 +226,7 @@ export default function TrainingScreen() {
 
       {/* Bottom buttons */}
       <View style={s.bottomBtns}>
-        {hasLoggedToday && (
+        {totalSetsToday > 0 && (
           <TouchableOpacity style={s.finishBtn} onPress={() => setSummaryVisible(true)} activeOpacity={0.8}>
             <Text style={s.finishBtnText}>Finish Workout</Text>
           </TouchableOpacity>
@@ -291,12 +299,35 @@ export default function TrainingScreen() {
       {summaryVisible && (
         <SessionSummaryModal
           visible={summaryVisible}
-          onClose={() => setSummaryVisible(false)}
+          duration={workoutStartRef.current ? Math.floor((Date.now() - workoutStartRef.current) / 1000) : 0}
+          onClose={() => {
+            const duration = workoutStartRef.current
+              ? Math.floor((Date.now() - workoutStartRef.current) / 1000)
+              : 0;
+            // Save snapshot to history before clearing
+            const snapshot = {
+              date: today,
+              duration,
+              exercises: exercises
+                .map(ex => ({ ...ex, sets: logs[today]?.[ex.id] ?? [] }))
+                .filter(ex => ex.sets.length > 0),
+            };
+            setCompletedWorkouts(prev => ({ ...prev, [today]: snapshot }));
+            // Reset today's session
+            setLogs(prev => { const n = { ...prev }; delete n[today]; return n; });
+            workoutStartRef.current = null;
+            setSummaryVisible(false);
+          }}
           exercises={exercises}
           logs={logs}
           date={today}
         />
       )}
+      <WorkoutHistoryModal
+        visible={historyVisible}
+        onClose={() => setHistoryVisible(false)}
+        completedWorkouts={completedWorkouts}
+      />
     </View>
   );
 }
@@ -331,6 +362,21 @@ const s = StyleSheet.create({
     fontSize: 22,
     fontWeight: '600',
     color: '#ffffff',
+  },
+  headerBtns: { flexDirection: 'row', gap: 6, alignItems: 'flex-start' },
+  headerBtn: {
+    borderWidth: 1,
+    borderColor: '#242424',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
+    marginTop: 4,
+  },
+  headerBtnText: {
+    fontFamily: 'monospace',
+    fontSize: 10,
+    color: '#666666',
+    letterSpacing: 0.5,
   },
   copyBtn: {
     borderWidth: 1,

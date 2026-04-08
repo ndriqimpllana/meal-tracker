@@ -5,18 +5,18 @@ export default function TabBar ({ activeTab, onSelect}) {
     return (
         <View style={s.bar}>
             <TouchableOpacity
-                style={[s.tab, activeTab === 'meals' && s.tabActive]}
-                onPress={() => onSelect('meals')}
-                activeOpacity={0.7}
-            >
-                <Text style={[s.label, activeTab === 'meals' && s.labelActive]}>Meal Plan</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
                 style={[s.tab, activeTab === 'training' && s.tabActive]}
                 onPress={() => onSelect('training')}
                 activeOpacity={0.7}
             >
                 <Text style={[s.label, activeTab === 'training' && s.labelActive]}>Training</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={[s.tab, activeTab === 'meals' && s.tabActive]}
+                onPress={() => onSelect('meals')}
+                activeOpacity={0.7}
+            >
+                <Text style={[s.label, activeTab === 'meals' && s.labelActive]}>Meal Plan</Text>
             </TouchableOpacity>
         </View>
     );
@@ -28,8 +28,8 @@ const s = StyleSheet.create({
     backgroundColor: '#000000',
     borderTopWidth: 1,
     borderTopColor: '#242424',
-    paddingBottom: 28,
-    paddingTop: 12,
+    paddingBottom: 4,
+    paddingTop: 8,
     paddingHorizontal: 16,
     gap: 8,
   },

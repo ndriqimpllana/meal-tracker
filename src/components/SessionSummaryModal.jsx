@@ -5,7 +5,17 @@ import {
 
 const ACCENT = '#4ade80';
 
-export default function SessionSummaryModal({ visible, onClose, exercises, logs, date }) {
+function fmtDuration(secs) {
+  if (!secs) return '--';
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${String(s).padStart(2, '0')}s`;
+  return `${s}s`;
+}
+
+export default function SessionSummaryModal({ visible, onClose, exercises, logs, date, duration }) {
   const todayLogs = logs[date] ?? {};
 
   const exerciseStats = exercises
@@ -40,8 +50,12 @@ export default function SessionSummaryModal({ visible, onClose, exercises, logs,
           {/* Totals */}
           <View style={s.totalsRow}>
             <View style={s.totalBox}>
+              <Text style={[s.totalVal, s.accentText]}>{fmtDuration(duration)}</Text>
+              <Text style={s.totalLbl}>Duration</Text>
+            </View>
+            <View style={s.totalBox}>
               <Text style={s.totalVal}>{totalSets}</Text>
-              <Text style={s.totalLbl}>Total Sets</Text>
+              <Text style={s.totalLbl}>Sets</Text>
             </View>
             <View style={s.totalBox}>
               <Text style={s.totalVal}>{exerciseStats.length}</Text>
@@ -140,7 +154,7 @@ const s = StyleSheet.create({
   },
   totalVal: {
     fontFamily: 'monospace',
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '600',
     color: '#ffffff',
   },

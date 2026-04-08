@@ -68,7 +68,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
                 <Text style={s.sheetTitle}>{exercise?.name}</Text>
                 <Text style={s.sheetMeta}>{exercise?.category} · {exercise?.equipment}</Text>
               </View>
-              <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
+              <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={s.closeBtnWrap}>
                 <Text style={s.closeBtn}>Close</Text>
               </TouchableOpacity>
             </View>
@@ -246,11 +246,14 @@ const s = StyleSheet.create({
     fontSize: 10,
     color: '#666666',
   },
+  closeBtnWrap: {
+    paddingVertical: 10,
+    paddingLeft: 20,
+  },
   closeBtn: {
     fontFamily: 'monospace',
-    fontSize: 11,
+    fontSize: 13,
     color: '#666666',
-    marginLeft: 12,
   },
 
   instructionsToggle: {
