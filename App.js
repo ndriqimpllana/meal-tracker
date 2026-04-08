@@ -11,7 +11,7 @@ export default function App() {
 
   return (
     <View style={s.root}>
-      <StatusBar barStyle={"light-content"} backgroundColor={"#000000"} />
+      <StatusBar barStyle={"dark-content"} backgroundColor={"#fef3ee"} />
       <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
         {activeTab === 'meals' ? <MealScreen /> : <TrainingScreen />}
         <TabBar activeTab={activeTab} onSelect={setActiveTab} />
@@ -21,6 +21,6 @@ export default function App() {
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0b0f1a' },
-  safe: { flex: 1, backgroundColor: '#0b0f1a' },
+  root: { flex: 1, backgroundColor: '#fef3ee' },
+  safe: { flex: 1, backgroundColor: '#fef3ee' },
 });

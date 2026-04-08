@@ -10,21 +10,17 @@ export default function DayNav({ days, activeDay, todayIndex, checkedMap, onSele
     >
       {days.map((d, i) => {
         const done = d.meals.every((_, mi) => checkedMap[`${i}-${mi}`]);
-        const any = d.meals.some((_, mi) => checkedMap[`${i}-${mi}`]);
-        const isActive = i === activeDay;
+        const any  = d.meals.some((_, mi) => checkedMap[`${i}-${mi}`]);
+        const isActive   = i === activeDay;
         const isTraining = d.type === 'training';
-        const isToday = i === todayIndex;
+        const isToday    = i === todayIndex;
 
         return (
           <TouchableOpacity
             key={i}
-            style={[
-              s.btn,
-              isActive && s.btnActive,
-              !isActive && isTraining && s.btnTraining,
-            ]}
+            style={[s.btn, isActive && s.btnActive, !isActive && isTraining && s.btnTraining]}
             onPress={() => onSelect(i)}
-            activeOpacity={0.7}
+            activeOpacity={0.75}
           >
             <Text style={[s.short, isActive && s.activeText]}>
               {isToday && isActive ? 'TODAY' : d.short}
@@ -32,9 +28,9 @@ export default function DayNav({ days, activeDay, todayIndex, checkedMap, onSele
             <Text style={[s.num, isActive && s.activeText]}>{i + 1}</Text>
             <View style={[
               s.dot,
-              isActive ? s.dotActive :
-              done ? s.dotDone :
-              any ? s.dotPartial :
+              isActive   ? s.dotActive   :
+              done       ? s.dotDone     :
+              any        ? s.dotPartial  :
               isTraining ? s.dotTraining :
               s.dotDefault,
             ]} />
@@ -54,43 +50,51 @@ const s = StyleSheet.create({
     alignItems: 'center',
     gap: 3,
     paddingHorizontal: 10,
-    paddingVertical: 8,
-    minWidth: 52,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#253048',
-    backgroundColor: '#131929',
-    overflow: 'hidden',
+    paddingVertical: 9,
+    minWidth: 54,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#f0d0c4',
+    backgroundColor: '#fff8f4',
+    shadowColor: '#c4906c',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 1,
   },
   btnActive: {
-    backgroundColor: '#ffffff',
-    borderColor: '#ffffff',
+    backgroundColor: '#2c1810',
+    borderColor: '#2c1810',
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 4,
   },
   btnTraining: {
-    borderColor: '#253048',
+    borderColor: '#e8c8bc',
   },
 
   short: {
     fontFamily: 'monospace',
-    fontSize: 10,
-    color: '#536080',
+    fontSize: 9,
+    color: '#c8a89c',
     letterSpacing: 0.5,
+    fontWeight: '600',
   },
   num: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#e8edf5',
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#2c1810',
   },
-  activeText: { color: '#000000' },
+  activeText: { color: '#ffffff' },
 
   dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
-  dotDefault:  { backgroundColor: '#3d4f6b' },
-  dotActive:   { backgroundColor: '#000000' },
-  dotTraining: { backgroundColor: '#60a5fa', opacity: 0.6 },
-  dotDone:     { backgroundColor: '#4ade80' },
-  dotPartial:  { backgroundColor: '#fbbf24' },
+  dotDefault:  { backgroundColor: '#e8c8bc' },
+  dotActive:   { backgroundColor: 'rgba(255,255,255,0.5)' },
+  dotTraining: { backgroundColor: '#3b82f6', opacity: 0.7 },
+  dotDone:     { backgroundColor: '#16a34a' },
+  dotPartial:  { backgroundColor: '#f59e0b' },
 });

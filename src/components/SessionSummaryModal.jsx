@@ -3,7 +3,7 @@ import {
   StyleSheet, Modal, ScrollView,
 } from 'react-native';
 
-const ACCENT = '#4ade80';
+const ACCENT = '#16a34a';
 
 function fmtDuration(secs) {
   if (!secs) return '--';
@@ -42,12 +42,11 @@ export default function SessionSummaryModal({ visible, onClose, exercises, logs,
               <Text style={s.label}>WORKOUT COMPLETE</Text>
               <Text style={s.title}>Session Summary</Text>
             </View>
-            <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={s.closeBtnWrap}>
+            <TouchableOpacity onPress={onClose} activeOpacity={0.75} style={s.closeBtnWrap}>
               <Text style={s.closeBtn}>✕ Close</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Totals */}
           <View style={s.totalsRow}>
             <View style={s.totalBox}>
               <Text style={[s.totalVal, s.accentText]}>{fmtDuration(duration)}</Text>
@@ -67,7 +66,6 @@ export default function SessionSummaryModal({ visible, onClose, exercises, logs,
             </View>
           </View>
 
-          {/* Per exercise breakdown */}
           <ScrollView showsVerticalScrollIndicator={false}>
             <Text style={s.sectionLabel}>BREAKDOWN</Text>
             {exerciseStats.length === 0 ? (
@@ -99,140 +97,55 @@ export default function SessionSummaryModal({ visible, onClose, exercises, logs,
 }
 
 const s = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
+  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(44,24,16,0.5)' },
   sheet: {
-    backgroundColor: '#131929',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    borderWidth: 1,
-    borderColor: '#253048',
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#f5ddd4',
     padding: 16,
     maxHeight: '80%',
+    shadowColor: '#2c1810',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
-  },
-  label: {
-    fontFamily: 'monospace',
-    fontSize: 9,
-    color: ACCENT,
-    letterSpacing: 1.5,
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#e8edf5',
-  },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
+  label: { fontFamily: 'monospace', fontSize: 9, color: ACCENT, letterSpacing: 1.5, marginBottom: 4, fontWeight: '700' },
+  title: { fontSize: 20, fontWeight: '700', color: '#2c1810' },
   closeBtnWrap: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#f8717155',
-    backgroundColor: '#1a0e0e',
+    paddingVertical: 7, paddingHorizontal: 13, borderRadius: 8,
+    borderWidth: 1.5, borderColor: '#fca5a5', backgroundColor: '#fff5f5',
   },
-  closeBtn: {
-    fontFamily: 'monospace',
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#f87171',
-  },
+  closeBtn: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', color: '#ef4444' },
 
-  totalsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 24,
-  },
+  totalsRow: { flexDirection: 'row', gap: 8, marginBottom: 24 },
   totalBox: {
-    flex: 1,
-    backgroundColor: '#1b2438',
-    borderWidth: 1,
-    borderColor: '#253048',
-    borderRadius: 10,
-    padding: 12,
-    alignItems: 'center',
-    gap: 3,
+    flex: 1, backgroundColor: '#fff8f4', borderWidth: 1.5, borderColor: '#f5ddd4',
+    borderRadius: 12, padding: 12, alignItems: 'center', gap: 3,
+    shadowColor: '#c4906c', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4,
   },
-  totalVal: {
-    fontFamily: 'monospace',
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#e8edf5',
-  },
+  totalVal:   { fontFamily: 'monospace', fontSize: 15, fontWeight: '700', color: '#2c1810' },
   accentText: { color: ACCENT },
-  totalLbl: {
-    fontFamily: 'monospace',
-    fontSize: 9,
-    color: '#536080',
-    letterSpacing: 0.5,
-  },
+  totalLbl:   { fontFamily: 'monospace', fontSize: 9, color: '#c8a89c', letterSpacing: 0.5, fontWeight: '600' },
 
-  sectionLabel: {
-    fontFamily: 'monospace',
-    fontSize: 9,
-    color: '#3d4f6b',
-    letterSpacing: 1,
-    marginBottom: 10,
-  },
-  noSets: {
-    fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#3d4f6b',
-    textAlign: 'center',
-    paddingVertical: 20,
-  },
+  sectionLabel: { fontFamily: 'monospace', fontSize: 9, color: '#d4b8b0', letterSpacing: 1, marginBottom: 10, fontWeight: '700' },
+  noSets: { fontFamily: 'monospace', fontSize: 11, color: '#d4b8b0', textAlign: 'center', paddingVertical: 20 },
   exRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1c2640',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#fdf0ea',
   },
-  exLeft: { flex: 1, gap: 3 },
-  exName: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#e8edf5',
-  },
-  exMeta: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    color: '#536080',
-  },
-  exVolume: { alignItems: 'flex-end' },
-  exVolumeVal: {
-    fontFamily: 'monospace',
-    fontSize: 15,
-    fontWeight: '600',
-    color: ACCENT,
-  },
-  exVolumeLbl: {
-    fontFamily: 'monospace',
-    fontSize: 9,
-    color: ACCENT,
-    opacity: 0.6,
-  },
+  exLeft:      { flex: 1, gap: 3 },
+  exName:      { fontSize: 13, fontWeight: '700', color: '#2c1810' },
+  exMeta:      { fontFamily: 'monospace', fontSize: 10, color: '#c8a89c' },
+  exVolume:    { alignItems: 'flex-end' },
+  exVolumeVal: { fontFamily: 'monospace', fontSize: 15, fontWeight: '700', color: ACCENT },
+  exVolumeLbl: { fontFamily: 'monospace', fontSize: 9, color: ACCENT, opacity: 0.6 },
 
   doneBtn: {
-    marginTop: 16,
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
+    marginTop: 16, backgroundColor: '#2c1810', borderRadius: 12, paddingVertical: 15, alignItems: 'center',
+    shadowColor: '#2c1810', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 8,
   },
-  doneBtnText: {
-    fontFamily: 'monospace',
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#000000',
-  },
+  doneBtnText: { fontFamily: 'monospace', fontSize: 13, fontWeight: '700', color: '#ffffff' },
 });

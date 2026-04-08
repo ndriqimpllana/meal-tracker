@@ -5,8 +5,9 @@ export default function MealCard({ meal, checked, onToggle }) {
     <TouchableOpacity
       style={[s.card, checked && s.cardChecked]}
       onPress={onToggle}
-      activeOpacity={0.7}
+      activeOpacity={0.75}
     >
+      <View style={s.accentBar} />
       <View style={[s.circle, checked && s.circleChecked]}>
         {checked && <Text style={s.checkmark}>✓</Text>}
       </View>
@@ -36,56 +37,76 @@ const s = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 12,
     padding: 14,
-    backgroundColor: '#131929',
-    borderWidth: 1,
-    borderColor: '#253048',
-    borderRadius: 10,
+    paddingLeft: 0,
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: '#f5ddd4',
+    borderRadius: 14,
+    shadowColor: '#c4906c',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
+    overflow: 'hidden',
   },
   cardChecked: {
-    backgroundColor: '#0e1220',
-    borderColor: '#1c2640',
+    backgroundColor: '#fdf8f6',
+    borderColor: '#f0e4de',
+    shadowOpacity: 0.04,
+  },
+
+  accentBar: {
+    width: 4,
+    alignSelf: 'stretch',
+    backgroundColor: '#f97316',
+    borderRadius: 2,
+    marginRight: 2,
+    flexShrink: 0,
   },
 
   circle: {
     flexShrink: 0,
-    width: 20,
-    height: 20,
+    width: 22,
+    height: 22,
     marginTop: 2,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: '#3d4f6b',
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: '#f0d0c4',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#fff8f4',
   },
   circleChecked: {
-    backgroundColor: '#4ade80',
-    borderColor: '#4ade80',
+    backgroundColor: '#16a34a',
+    borderColor: '#16a34a',
   },
   checkmark: {
-    fontSize: 10,
-    color: '#000000',
-    lineHeight: 12,
+    fontSize: 11,
+    color: '#ffffff',
+    fontWeight: '700',
+    lineHeight: 13,
   },
 
-  info: { flex: 1 },
+  info: { flex: 1, paddingRight: 12 },
   slot: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#536080',
+    color: '#f97316',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     marginBottom: 3,
+    fontWeight: '700',
   },
   name: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#e8edf5',
-    lineHeight: 20,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#2c1810',
+    lineHeight: 21,
     marginBottom: 4,
   },
   desc: {
     fontSize: 12,
-    color: '#8b9cbf',
+    color: '#9b7060',
     lineHeight: 18,
     marginBottom: 8,
   },
@@ -95,17 +116,15 @@ const s = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 3,
   },
-  macroKcal:    { fontFamily: 'monospace', fontSize: 10, color: '#fb923c' },
-  macroProtein: { fontFamily: 'monospace', fontSize: 10, color: '#c084fc' },
-  macroCarbs:   { fontFamily: 'monospace', fontSize: 10, color: '#fbbf24' },
-  macroFat:     { fontFamily: 'monospace', fontSize: 10, color: '#f87171' },
-  macroFiber:   { fontFamily: 'monospace', fontSize: 10, color: '#2dd4bf' },
+  macroKcal:    { fontFamily: 'monospace', fontSize: 10, color: '#f97316', fontWeight: '600' },
+  macroProtein: { fontFamily: 'monospace', fontSize: 10, color: '#a855f7', fontWeight: '600' },
+  macroCarbs:   { fontFamily: 'monospace', fontSize: 10, color: '#f59e0b', fontWeight: '600' },
+  macroFat:     { fontFamily: 'monospace', fontSize: 10, color: '#ef4444', fontWeight: '600' },
+  macroFiber:   { fontFamily: 'monospace', fontSize: 10, color: '#14b8a6', fontWeight: '600' },
   macroDot: {
     fontFamily: 'monospace',
     fontSize: 10,
-    color: '#3d4f6b',
+    color: '#e8c8bc',
   },
-  dimText: {
-    color: '#2d3a52',
-  },
+  dimText: { color: '#d4b8b0' },
 });

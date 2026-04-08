@@ -4,16 +4,15 @@ import {
   StyleSheet, Modal, ScrollView,
 } from 'react-native';
 
-const ACCENT = '#4ade80';
+const ACCENT = '#16a34a';
 
 export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, onClose, previousSessions }) {
-  const [weight, setWeight]               = useState('');
-  const [reps, setReps]                   = useState('');
-  const [timer, setTimer]                 = useState(null);
-  const [instructions, setInstructions]   = useState(null);
+  const [weight, setWeight]             = useState('');
+  const [reps, setReps]                 = useState('');
+  const [timer, setTimer]               = useState(null);
+  const [instructions, setInstructions] = useState(null);
   const [showInstructions, setShowInstructions] = useState(false);
 
-  // Pre-fill inputs from last logged set
   useEffect(() => {
     if (sets.length > 0) {
       const last = sets[sets.length - 1];
@@ -22,25 +21,19 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
     }
   }, [sets.length]);
 
-  // Rest timer countdown
   useEffect(() => {
-    if (!timer || timer <= 0) {
-      if (timer === 0) setTimer(null);
-      return;
-    }
+    if (!timer || timer <= 0) { if (timer === 0) setTimer(null); return; }
     const id = setInterval(() => setTimer(t => t - 1), 1000);
     return () => clearInterval(id);
   }, [timer]);
 
-  // Fetch exercise instructions from wger
   useEffect(() => {
     if (!visible || !exercise?.id) return;
-    setInstructions(null);
-    setShowInstructions(false);
+    setInstructions(null); setShowInstructions(false);
     fetch(`https://wger.de/api/v2/exerciseinfo/${exercise.id}/?format=json`)
       .then(r => r.json())
       .then(data => {
-        const en = data.translations?.find(t => t.language === 2);
+        const en  = data.translations?.find(t => t.language === 2);
         const raw = en?.description ?? '';
         const clean = raw.replace(/<[^>]*>/g, '').trim();
         if (clean) setInstructions(clean);
@@ -68,18 +61,14 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
                 <Text style={s.sheetTitle}>{exercise?.name}</Text>
                 <Text style={s.sheetMeta}>{exercise?.category} · {exercise?.equipment}</Text>
               </View>
-              <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={s.closeBtnWrap}>
+              <TouchableOpacity onPress={onClose} activeOpacity={0.75} style={s.closeBtnWrap}>
                 <Text style={s.closeBtn}>✕ Close</Text>
               </TouchableOpacity>
             </View>
 
             {/* Instructions toggle */}
             {instructions && (
-              <TouchableOpacity
-                style={s.instructionsToggle}
-                onPress={() => setShowInstructions(v => !v)}
-                activeOpacity={0.7}
-              >
+              <TouchableOpacity style={s.instructionsToggle} onPress={() => setShowInstructions(v => !v)} activeOpacity={0.75}>
                 <Text style={s.instructionsToggleText}>
                   {showInstructions ? 'Hide instructions ↑' : 'Show instructions ↓'}
                 </Text>
@@ -96,15 +85,13 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
               <View style={s.timerBox}>
                 <View style={s.timerLeft}>
                   <Text style={s.timerLabel}>REST</Text>
-                  <Text style={[s.timerCount, timer <= 10 && s.timerCountUrgent]}>
-                    {formatTimer(timer)}
-                  </Text>
+                  <Text style={[s.timerCount, timer <= 10 && s.timerCountUrgent]}>{formatTimer(timer)}</Text>
                 </View>
                 <View style={s.timerBtns}>
-                  <TouchableOpacity style={s.timerAdd} onPress={() => setTimer(t => t + 30)} activeOpacity={0.7}>
+                  <TouchableOpacity style={s.timerAdd} onPress={() => setTimer(t => t + 30)} activeOpacity={0.75}>
                     <Text style={s.timerAddText}>+30s</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={s.timerSkip} onPress={() => setTimer(null)} activeOpacity={0.7}>
+                  <TouchableOpacity style={s.timerSkip} onPress={() => setTimer(null)} activeOpacity={0.75}>
                     <Text style={s.timerSkipText}>Skip</Text>
                   </TouchableOpacity>
                 </View>
@@ -116,49 +103,36 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
               <View style={s.inputGroup}>
                 <Text style={s.inputLabel}>LBS</Text>
                 <TextInput
-                  style={s.input}
-                  placeholder="0"
-                  placeholderTextColor="#3d4f6b"
-                  value={weight}
-                  onChangeText={setWeight}
-                  keyboardType="decimal-pad"
+                  style={s.input} placeholder="0" placeholderTextColor="#d4b8b0"
+                  value={weight} onChangeText={setWeight} keyboardType="decimal-pad"
                 />
               </View>
               <View style={s.inputGroup}>
                 <Text style={s.inputLabel}>REPS</Text>
                 <TextInput
-                  style={s.input}
-                  placeholder="0"
-                  placeholderTextColor="#3d4f6b"
-                  value={reps}
-                  onChangeText={setReps}
-                  keyboardType="number-pad"
+                  style={s.input} placeholder="0" placeholderTextColor="#d4b8b0"
+                  value={reps} onChangeText={setReps} keyboardType="number-pad"
                 />
               </View>
-              <TouchableOpacity style={s.addBtn} onPress={handleAdd} activeOpacity={0.7}>
+              <TouchableOpacity style={s.addBtn} onPress={handleAdd} activeOpacity={0.75}>
                 <Text style={s.addBtnText}>Add Set</Text>
               </TouchableOpacity>
             </View>
 
             {/* Today's sets */}
             {sets.length === 0 ? (
-              <View style={s.empty}>
-                <Text style={s.emptyText}>No sets logged yet</Text>
-              </View>
+              <View style={s.empty}><Text style={s.emptyText}>No sets logged yet</Text></View>
             ) : (
               <>
                 <View style={s.setsHeader}>
-                  <Text style={s.setsHeaderText}>SET</Text>
-                  <Text style={s.setsHeaderText}>LBS</Text>
-                  <Text style={s.setsHeaderText}>REPS</Text>
-                  <Text style={s.setsHeaderText}> </Text>
+                  {['SET','LBS','REPS',' '].map(h => <Text key={h} style={s.setsHeaderText}>{h}</Text>)}
                 </View>
                 {sets.map((item, index) => (
                   <View key={index} style={s.setRow}>
                     <Text style={s.setNum}>{index + 1}</Text>
                     <Text style={s.setValue}>{item.weight} lbs</Text>
                     <Text style={s.setValue}>{item.reps}</Text>
-                    <TouchableOpacity onPress={() => onRemove(index)} activeOpacity={0.7}>
+                    <TouchableOpacity onPress={() => onRemove(index)} activeOpacity={0.75}>
                       <Text style={s.removeBtn}>✕</Text>
                     </TouchableOpacity>
                   </View>
@@ -198,9 +172,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
                     <Text style={s.historyData}>
                       {session.sets} sets · {session.maxWeight} lbs max
                       {i === 0 && previousSessions.length > 1 && session.maxWeight > previousSessions[1].maxWeight
-                        ? <Text style={s.historyPR}> ↑ PR</Text>
-                        : null
-                      }
+                        ? <Text style={s.historyPR}> ↑ PR</Text> : null}
                     </Text>
                   </View>
                 ))}
@@ -215,304 +187,106 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
 }
 
 const s = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
+  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(44,24,16,0.5)' },
   sheet: {
-    backgroundColor: '#131929',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    borderWidth: 1,
-    borderColor: '#253048',
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#f5ddd4',
     padding: 16,
     maxHeight: '85%',
+    shadowColor: '#2c1810',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
   },
-  sheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  titleBlock: { gap: 3, flex: 1 },
-  sheetTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#e8edf5',
-  },
-  sheetMeta: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    color: '#536080',
-  },
+  sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
+  titleBlock:  { gap: 3, flex: 1 },
+  sheetTitle:  { fontSize: 17, fontWeight: '700', color: '#2c1810' },
+  sheetMeta:   { fontFamily: 'monospace', fontSize: 10, color: '#c8a89c' },
   closeBtnWrap: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#f8717155',
-    backgroundColor: '#1a0e0e',
+    paddingVertical: 7, paddingHorizontal: 13, borderRadius: 8,
+    borderWidth: 1.5, borderColor: '#fca5a5', backgroundColor: '#fff5f5',
   },
-  closeBtn: {
-    fontFamily: 'monospace',
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#f87171',
-  },
+  closeBtn: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', color: '#ef4444' },
 
   instructionsToggle: {
-    alignSelf: 'flex-start',
-    marginBottom: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: ACCENT + '55',
-    backgroundColor: ACCENT + '18',
+    alignSelf: 'flex-start', marginBottom: 12, paddingHorizontal: 12, paddingVertical: 7,
+    borderRadius: 8, borderWidth: 1.5, borderColor: ACCENT + '55', backgroundColor: '#f0fdf4',
   },
-  instructionsToggleText: {
-    fontFamily: 'monospace',
-    fontSize: 11,
-    color: ACCENT,
-    letterSpacing: 0.3,
-    fontWeight: '600',
-  },
+  instructionsToggleText: { fontFamily: 'monospace', fontSize: 11, color: ACCENT, fontWeight: '700' },
   instructionsBox: {
-    backgroundColor: '#0b0f1a',
-    borderWidth: 1,
-    borderColor: '#1c2640',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 14,
+    backgroundColor: '#fafafa', borderWidth: 1, borderColor: '#f0d0c4',
+    borderRadius: 10, padding: 12, marginBottom: 14,
   },
-  instructionsText: {
-    fontSize: 12,
-    color: '#8b9cbf',
-    lineHeight: 19,
-  },
+  instructionsText: { fontSize: 12, color: '#9b7060', lineHeight: 19 },
 
   timerBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#0d1a0d',
-    borderWidth: 1,
-    borderColor: ACCENT + '44',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 14,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#f0fdf4', borderWidth: 1.5, borderColor: ACCENT + '55',
+    borderRadius: 12, padding: 12, marginBottom: 14,
   },
-  timerLeft: { gap: 2 },
-  timerLabel: {
-    fontFamily: 'monospace',
-    fontSize: 9,
-    color: ACCENT,
-    letterSpacing: 1,
-  },
-  timerCount: {
-    fontFamily: 'monospace',
-    fontSize: 28,
-    fontWeight: '600',
-    color: ACCENT,
-  },
-  timerCountUrgent: { color: '#f87171' },
-  timerBtns: { flexDirection: 'row', gap: 8 },
+  timerLeft:       { gap: 2 },
+  timerLabel:      { fontFamily: 'monospace', fontSize: 9, color: ACCENT, letterSpacing: 1, fontWeight: '700' },
+  timerCount:      { fontFamily: 'monospace', fontSize: 28, fontWeight: '700', color: ACCENT },
+  timerCountUrgent:{ color: '#ef4444' },
+  timerBtns:       { flexDirection: 'row', gap: 8 },
   timerAdd: {
-    borderWidth: 1,
-    borderColor: ACCENT + '66',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    borderWidth: 1.5, borderColor: ACCENT + '66', borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 7, backgroundColor: '#dcfce7',
   },
-  timerAddText: {
-    fontFamily: 'monospace',
-    fontSize: 11,
-    color: ACCENT,
-  },
+  timerAddText:  { fontFamily: 'monospace', fontSize: 12, color: ACCENT, fontWeight: '700' },
   timerSkip: {
-    borderWidth: 1,
-    borderColor: '#253048',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    borderWidth: 1.5, borderColor: '#f0d0c4', borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 7, backgroundColor: '#fff8f4',
   },
-  timerSkipText: {
-    fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#536080',
-  },
+  timerSkipText: { fontFamily: 'monospace', fontSize: 12, color: '#c8a89c', fontWeight: '600' },
 
-  inputRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
-    alignItems: 'flex-end',
-  },
+  inputRow: { flexDirection: 'row', gap: 8, marginBottom: 16, alignItems: 'flex-end' },
   inputGroup: { flex: 1, gap: 6 },
-  inputLabel: {
-    fontFamily: 'monospace',
-    fontSize: 9,
-    color: '#536080',
-    letterSpacing: 0.8,
-  },
+  inputLabel: { fontFamily: 'monospace', fontSize: 9, color: '#c8a89c', letterSpacing: 0.8, fontWeight: '700' },
   input: {
-    backgroundColor: '#0b0f1a',
-    borderWidth: 1,
-    borderColor: '#253048',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: '#e8edf5',
-    fontFamily: 'monospace',
-    fontSize: 18,
-    textAlign: 'center',
+    backgroundColor: '#fff8f4', borderWidth: 1.5, borderColor: '#f0d0c4',
+    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11,
+    color: '#2c1810', fontFamily: 'monospace', fontSize: 18, textAlign: 'center', fontWeight: '700',
   },
   addBtn: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    flex: 1, backgroundColor: '#2c1810', borderRadius: 10, paddingVertical: 11,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#2c1810', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 6,
   },
-  addBtnText: {
-    fontFamily: 'monospace',
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#000000',
-  },
+  addBtnText: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', color: '#ffffff' },
 
-  empty: {
-    paddingVertical: 24,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#3d4f6b',
-  },
+  empty:     { paddingVertical: 24, alignItems: 'center' },
+  emptyText: { fontFamily: 'monospace', fontSize: 11, color: '#d4b8b0' },
 
-  setsHeader: {
-    flexDirection: 'row',
-    marginBottom: 6,
-    paddingHorizontal: 4,
-  },
-  setsHeaderText: {
-    flex: 1,
-    fontFamily: 'monospace',
-    fontSize: 9,
-    color: '#3d4f6b',
-    letterSpacing: 0.8,
-  },
+  setsHeader: { flexDirection: 'row', marginBottom: 6, paddingHorizontal: 4 },
+  setsHeaderText: { flex: 1, fontFamily: 'monospace', fontSize: 9, color: '#d4b8b0', letterSpacing: 0.8, fontWeight: '700' },
   setRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 9,
-    paddingHorizontal: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1c2640',
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 4,
+    borderBottomWidth: 1, borderBottomColor: '#fdf0ea',
   },
-  setNum: {
-    flex: 1,
-    fontFamily: 'monospace',
-    fontSize: 12,
-    color: '#536080',
-  },
-  setValue: {
-    flex: 1,
-    fontFamily: 'monospace',
-    fontSize: 13,
-    color: '#e8edf5',
-  },
-  removeBtn: {
-    fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#3d4f6b',
-    paddingLeft: 8,
-  },
+  setNum:    { flex: 1, fontFamily: 'monospace', fontSize: 12, color: '#c8a89c', fontWeight: '600' },
+  setValue:  { flex: 1, fontFamily: 'monospace', fontSize: 13, color: '#2c1810', fontWeight: '600' },
+  removeBtn: { fontFamily: 'monospace', fontSize: 12, color: '#f0d0c4', paddingLeft: 8 },
 
-  chart: {
-    marginTop: 20,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#1c2640',
-    marginBottom: 4,
-  },
-  chartLabel: {
-    fontFamily: 'monospace',
-    fontSize: 9,
-    color: '#3d4f6b',
-    letterSpacing: 1,
-    marginBottom: 12,
-  },
-  chartBars: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 6,
-    height: 80,
-  },
-  chartBarWrap: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 4,
-  },
-  chartBarVal: {
-    fontFamily: 'monospace',
-    fontSize: 8,
-    color: ACCENT,
-  },
-  chartBarTrack: {
-    width: '100%',
-    height: 56,
-    justifyContent: 'flex-end',
-  },
-  chartBar: {
-    width: '100%',
-    backgroundColor: ACCENT + '66',
-    borderRadius: 3,
-    minHeight: 4,
-  },
-  chartBarDate: {
-    fontFamily: 'monospace',
-    fontSize: 7,
-    color: '#3d4f6b',
-  },
+  chart: { marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#fdf0ea', marginBottom: 4 },
+  chartLabel: { fontFamily: 'monospace', fontSize: 9, color: '#d4b8b0', letterSpacing: 1, marginBottom: 12, fontWeight: '700' },
+  chartBars:  { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 80 },
+  chartBarWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 4 },
+  chartBarVal:  { fontFamily: 'monospace', fontSize: 8, color: ACCENT, fontWeight: '700' },
+  chartBarTrack:{ width: '100%', height: 56, justifyContent: 'flex-end' },
+  chartBar:     { width: '100%', backgroundColor: ACCENT + '55', borderRadius: 3, minHeight: 4 },
+  chartBarDate: { fontFamily: 'monospace', fontSize: 7, color: '#d4b8b0' },
 
-  historySection: {
-    marginTop: 20,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#1c2640',
-  },
-  historyLabel: {
-    fontFamily: 'monospace',
-    fontSize: 9,
-    color: '#3d4f6b',
-    letterSpacing: 1,
-    marginBottom: 10,
-  },
+  historySection: { marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#fdf0ea' },
+  historyLabel: { fontFamily: 'monospace', fontSize: 9, color: '#d4b8b0', letterSpacing: 1, marginBottom: 10, fontWeight: '700' },
   historyRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 7,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1c2640',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#fdf0ea',
   },
-  historyDate: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    color: '#536080',
-  },
-  historyData: {
-    fontFamily: 'monospace',
-    fontSize: 11,
-    color: '#8b9cbf',
-  },
-  historyPR: {
-    color: ACCENT,
-    fontWeight: '600',
-  },
+  historyDate: { fontFamily: 'monospace', fontSize: 10, color: '#c8a89c' },
+  historyData: { fontFamily: 'monospace', fontSize: 11, color: '#9b7060' },
+  historyPR:   { color: ACCENT, fontWeight: '700' },
 });
