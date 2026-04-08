@@ -7,36 +7,58 @@ import { DAYS } from '../data/days';
 import { useStorage } from '../hooks/useStorage';
 import DayNav from '../components/DayNav';
 import MealCard from '../components/MealCard';
+import BodyWeightModal from '../components/BodyWeightModal';
+
+const WATER_GOAL_OZ  = 100;
+const WATER_STEP_OZ  = 8;
 
 export default function MealScreen() {
   const today = new Date().getDay(); // 0=Sun
   const dayMap = [6, 0, 1, 2, 3, 4, 5];
-  const [activeDay, setActiveDay] = useState(dayMap[today]);
-  const todayIndex = dayMap[today];
-  const [checked, setChecked] = useStorage('mealChecked', {});
-  const [resetVisible, setResetVisible] = useState(false);
+  const [activeDay, setActiveDay]     = useState(dayMap[today]);
+  const todayIndex                    = dayMap[today];
+  const todayStr                      = new Date().toISOString().split('T')[0];
+
+  const [checked, setChecked]         = useStorage('mealChecked', {});
+  const [waterLog, setWaterLog]       = useStorage('waterLog', {});
+  const [resetVisible, setResetVisible]   = useState(false);
+  const [weightVisible, setWeightVisible] = useState(false);
+
+  const waterOz = waterLog[todayStr] ?? 0;
+  const waterPct = Math.min(Math.round((waterOz / WATER_GOAL_OZ) * 100), 100);
+
+  const addWater = () => {
+    setWaterLog(prev => ({
+      ...prev,
+      [todayStr]: Math.min((prev[todayStr] ?? 0) + WATER_STEP_OZ, WATER_GOAL_OZ),
+    }));
+  };
+
+  const removeWater = () => {
+    setWaterLog(prev => ({
+      ...prev,
+      [todayStr]: Math.max((prev[todayStr] ?? 0) - WATER_STEP_OZ, 0),
+    }));
+  };
 
   const toggleMeal = (dayIdx, mealIdx) => {
     const key = `${dayIdx}-${mealIdx}`;
     setChecked(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
- const resetAll = () => setResetVisible(true);
-
- const confirmReset = () => {
+  const resetAll    = () => setResetVisible(true);
+  const confirmReset = () => {
     setChecked({});
     setResetVisible(false);
-  
- }
+  };
 
-  // Only count meals up to and including today for the week progress
-  const mealsUpToToday = DAYS.slice(0, todayIndex + 1).reduce((s, d) => s + d.meals.length, 0);
-  const totalDone = Object.values(checked).filter(Boolean).length;
-  const weekPct = Math.round((totalDone / mealsUpToToday) * 100);
+  const mealsUpToToday  = DAYS.slice(0, todayIndex + 1).reduce((s, d) => s + d.meals.length, 0);
+  const totalDone       = Object.values(checked).filter(Boolean).length;
+  const weekPct         = Math.round((totalDone / mealsUpToToday) * 100);
 
-  const day = DAYS[activeDay];
+  const day    = DAYS[activeDay];
   const dayDone = day.meals.filter((_, i) => checked[`${activeDay}-${i}`]).length;
-  const dayPct = Math.round((dayDone / day.meals.length) * 100);
+  const dayPct  = Math.round((dayDone / day.meals.length) * 100);
 
   return (
     <View style={s.root}>
@@ -48,17 +70,41 @@ export default function MealScreen() {
             <View style={s.headerTop}>
               <View>
                 <Text style={s.appLabel}>Meal Tracker</Text>
-                <Text style={s.title}>Your plan{'\n'}82 kg · recomp</Text>
+                <Text style={s.title}>Your plan{'\n'}181 lbs · recomp</Text>
               </View>
-              <TouchableOpacity style={s.resetBtn} onPress={resetAll} activeOpacity={0.6}>
-                <Text style={s.resetBtnText}>Reset week</Text>
-              </TouchableOpacity>
+              <View style={s.headerBtns}>
+                <TouchableOpacity style={s.headerBtn} onPress={() => setWeightVisible(true)} activeOpacity={0.6}>
+                  <Text style={s.headerBtnText}>Log Weight</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={s.headerBtn} onPress={resetAll} activeOpacity={0.6}>
+                  <Text style={s.headerBtnText}>Reset week</Text>
+                </TouchableOpacity>
+              </View>
             </View>
+
+            {/* Week progress */}
             <View style={s.progressRow}>
               <View style={s.progressBar}>
                 <View style={[s.progressFill, { width: `${weekPct}%` }]} />
               </View>
               <Text style={s.progressText}>{totalDone} / {mealsUpToToday} meals</Text>
+            </View>
+
+            {/* Water tracker */}
+            <View style={s.waterRow}>
+              <View style={s.waterLeft}>
+                <Text style={s.waterLabel}>WATER</Text>
+                <View style={s.waterBar}>
+                  <View style={[s.waterFill, { width: `${waterPct}%` }]} />
+                </View>
+              </View>
+              <Text style={s.waterCount}>{waterOz} / {WATER_GOAL_OZ} oz</Text>
+              <TouchableOpacity style={s.waterMinus} onPress={removeWater} activeOpacity={0.6}>
+                <Text style={s.waterBtnText}>−</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.waterPlus} onPress={addWater} activeOpacity={0.6}>
+                <Text style={s.waterBtnText}>+8oz</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -78,11 +124,11 @@ export default function MealScreen() {
           {/* ── Macro strip ── */}
           <View style={s.macroStrip}>
             {[
-              { val: String(day.cal), lbl: 'Calories' },
-              { val: `${day.protein}g`, lbl: 'Protein' },
-              { val: `${day.carbs}g`, lbl: 'Carbs' },
-              { val: `${day.fat}g`, lbl: 'Fat' },
-              { val: `${day.fiber}g`, lbl: 'Fiber' },
+              { val: String(day.cal),      lbl: 'Calories' },
+              { val: `${day.protein}g`,    lbl: 'Protein'  },
+              { val: `${day.carbs}g`,      lbl: 'Carbs'    },
+              { val: `${day.fat}g`,        lbl: 'Fat'      },
+              { val: `${day.fiber}g`,      lbl: 'Fiber'    },
             ].map(({ val, lbl }) => (
               <View key={lbl} style={s.macroBox}>
                 <Text style={s.macroVal}>{val}</Text>
@@ -94,14 +140,14 @@ export default function MealScreen() {
           {/* ── Meals list ── */}
           <View style={s.mealsList}>
             {day.meals
-              .map((meal, i) => ({meal, i}))
-              .filter(({i}) => !checked[`${activeDay}-${i}`])
-              .map(({meal, i}) => (
+              .map((meal, i) => ({ meal, i }))
+              .filter(({ i }) => !checked[`${activeDay}-${i}`])
+              .map(({ meal, i }) => (
                 <MealCard
-                key={i}
-                meal={meal}
-                checked={false}
-                onToggle={() => toggleMeal(activeDay, i)}
+                  key={i}
+                  meal={meal}
+                  checked={false}
+                  onToggle={() => toggleMeal(activeDay, i)}
                 />
               ))
             }
@@ -128,10 +174,12 @@ export default function MealScreen() {
           )}
 
         </ScrollView>
-        <Modal transparent visible={resetVisible} animationType='fade'>
+
+        {/* Reset modal */}
+        <Modal transparent visible={resetVisible} animationType="fade">
           <View style={s.overlay}>
             <View style={s.dialog}>
-              <Text style={s.dialogTitle}>Reset Week ?</Text>
+              <Text style={s.dialogTitle}>Reset Week?</Text>
               <View style={s.dialogBtns}>
                 <TouchableOpacity style={s.dialogCancel} onPress={() => setResetVisible(false)} activeOpacity={0.7}>
                   <Text style={s.dialogCancelText}>Cancel</Text>
@@ -143,6 +191,8 @@ export default function MealScreen() {
             </View>
           </View>
         </Modal>
+
+        <BodyWeightModal visible={weightVisible} onClose={() => setWeightVisible(false)} />
       </View>
     </View>
   );
@@ -154,7 +204,6 @@ const s = StyleSheet.create({
   scroll: { flex: 1 },
   content: { padding: 16, paddingBottom: 60 },
 
-  // Header
   header: {
     paddingTop: 24,
     paddingBottom: 20,
@@ -182,23 +231,26 @@ const s = StyleSheet.create({
     color: '#ffffff',
     lineHeight: 28,
   },
-  resetBtn: {
+  headerBtns: { gap: 6, alignItems: 'flex-end' },
+  headerBtn: {
     borderWidth: 1,
     borderColor: '#242424',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 4,
   },
-  resetBtnText: {
+  headerBtnText: {
     fontFamily: 'monospace',
     fontSize: 10,
     color: '#666666',
     letterSpacing: 0.5,
   },
+
   progressRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    marginBottom: 14,
   },
   progressBar: {
     flex: 1,
@@ -216,6 +268,56 @@ const s = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 11,
     color: '#666666',
+  },
+
+  // Water tracker
+  waterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  waterLeft: { flex: 1, gap: 5 },
+  waterLabel: {
+    fontFamily: 'monospace',
+    fontSize: 9,
+    color: '#555555',
+    letterSpacing: 1,
+  },
+  waterBar: {
+    height: 3,
+    backgroundColor: '#242424',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  waterFill: {
+    height: '100%',
+    backgroundColor: '#60a5fa',
+    borderRadius: 2,
+  },
+  waterCount: {
+    fontFamily: 'monospace',
+    fontSize: 10,
+    color: '#555555',
+  },
+  waterMinus: {
+    borderWidth: 1,
+    borderColor: '#242424',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  waterPlus: {
+    borderWidth: 1,
+    borderColor: '#242424',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: '#0a1628',
+  },
+  waterBtnText: {
+    fontFamily: 'monospace',
+    fontSize: 10,
+    color: '#60a5fa',
   },
 
   // Day section
@@ -262,12 +364,12 @@ const s = StyleSheet.create({
   },
   macroVal: {
     fontFamily: 'monospace',
-    fontSize: 17,
+    fontSize: 14,
     fontWeight: '500',
     color: '#ffffff',
   },
   macroLbl: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#666666',
     marginTop: 2,
     letterSpacing: 0.4,
@@ -328,55 +430,56 @@ const s = StyleSheet.create({
     color: '#666666',
     lineHeight: 20,
   },
-  overlay: {
-  flex: 1,
-  backgroundColor: 'rgba(0,0,0,0.75)',
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-dialog: {
-  width: 280,
-  backgroundColor: '#111111',
-  borderWidth: 1,
-  borderColor: '#242424',
-  borderRadius: 12,
-  padding: 24,
-},
-dialogTitle: {
-  fontSize: 18,
-  fontWeight: '600',
-  color: '#ffffff',
-  marginBottom: 24,
-},
-dialogBtns: {
-  flexDirection: 'row',
-  gap: 10,
-},
-dialogCancel: {
-  flex: 1,
-  paddingVertical: 10,
-  borderWidth: 1,
-  borderColor: '#242424',
-  borderRadius: 6,
-  alignItems: 'center',
-},
-dialogCancelText: {
-  fontFamily: 'monospace',
-  fontSize: 12,
-  color: '#666666',
-},
-dialogReset: {
-  flex: 1,
-  paddingVertical: 10,
-  backgroundColor: '#ffffff',
-  borderRadius: 6,
-  alignItems: 'center',
-},
-dialogResetText: {
-  fontFamily: 'monospace',
-  fontSize: 12,
-  color: '#000000',
-  fontWeight: '600',
-},
 
+  // Reset modal
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dialog: {
+    width: 280,
+    backgroundColor: '#111111',
+    borderWidth: 1,
+    borderColor: '#242424',
+    borderRadius: 12,
+    padding: 24,
+  },
+  dialogTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 24,
+  },
+  dialogBtns: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  dialogCancel: {
+    flex: 1,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#242424',
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  dialogCancelText: {
+    fontFamily: 'monospace',
+    fontSize: 12,
+    color: '#666666',
+  },
+  dialogReset: {
+    flex: 1,
+    paddingVertical: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  dialogResetText: {
+    fontFamily: 'monospace',
+    fontSize: 12,
+    color: '#000000',
+    fontWeight: '600',
+  },
 });

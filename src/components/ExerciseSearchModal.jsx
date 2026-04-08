@@ -17,17 +17,27 @@ const CATEGORIES = [
 ];
 
 export default function ExerciseSearchModal({ visible, onClose, onAdd }) {
-  const [query, setQuery]           = useState('');
-  const [results, setResults]       = useState([]);
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState(null);
+  const [query, setQuery]                   = useState('');
+  const [results, setResults]               = useState([]);
+  const [loading, setLoading]               = useState(false);
+  const [error, setError]                   = useState(null);
   const [activeCategory, setActiveCategory] = useState(null);
+  const [mode, setMode]                     = useState('search'); // 'search' | 'custom'
+
+  // Custom exercise fields
+  const [customName, setCustomName]         = useState('');
+  const [customCategory, setCustomCategory] = useState('');
+  const [customEquipment, setCustomEquipment] = useState('');
 
   const reset = () => {
     setQuery('');
     setResults([]);
     setError(null);
     setActiveCategory(null);
+    setMode('search');
+    setCustomName('');
+    setCustomCategory('');
+    setCustomEquipment('');
   };
 
   const searchByText = async (term) => {
@@ -87,6 +97,18 @@ export default function ExerciseSearchModal({ visible, onClose, onAdd }) {
     reset();
   };
 
+  const handleAddCustom = () => {
+    if (!customName.trim()) return;
+    onAdd({
+      id:        `custom_${Date.now()}`,
+      name:      customName.trim(),
+      category:  customCategory.trim() || 'Custom',
+      equipment: customEquipment.trim() || 'None',
+    });
+    onClose();
+    reset();
+  };
+
   const handleClose = () => {
     onClose();
     reset();
@@ -105,63 +127,132 @@ export default function ExerciseSearchModal({ visible, onClose, onAdd }) {
             </TouchableOpacity>
           </View>
 
-          {/* Text search */}
-          <View style={s.searchRow}>
-            <TextInput
-              style={s.input}
-              placeholder="Search by name..."
-              placeholderTextColor="#555555"
-              value={query}
-              onChangeText={setQuery}
-              onSubmitEditing={() => searchByText(query)}
-              returnKeyType="search"
-              autoFocus
-            />
-            <TouchableOpacity style={s.searchBtn} onPress={() => searchByText(query)} activeOpacity={0.7}>
-              <Text style={s.searchBtnText}>Search</Text>
+          {/* Mode toggle */}
+          <View style={s.modeRow}>
+            <TouchableOpacity
+              style={[s.modeBtn, mode === 'search' && s.modeBtnActive]}
+              onPress={() => setMode('search')}
+              activeOpacity={0.7}
+            >
+              <Text style={[s.modeBtnText, mode === 'search' && s.modeBtnTextActive]}>Search</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[s.modeBtn, mode === 'custom' && s.modeBtnActive]}
+              onPress={() => setMode('custom')}
+              activeOpacity={0.7}
+            >
+              <Text style={[s.modeBtnText, mode === 'custom' && s.modeBtnTextActive]}>Custom</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Muscle group chips */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={s.chips}
-            style={s.chipsScroll}
-          >
-            {CATEGORIES.map(cat => (
+          {mode === 'search' ? (
+            <>
+              {/* Text search */}
+              <View style={s.searchRow}>
+                <TextInput
+                  style={s.input}
+                  placeholder="Search by name..."
+                  placeholderTextColor="#555555"
+                  value={query}
+                  onChangeText={setQuery}
+                  onSubmitEditing={() => searchByText(query)}
+                  returnKeyType="search"
+                  autoFocus
+                />
+                <TouchableOpacity style={s.searchBtn} onPress={() => searchByText(query)} activeOpacity={0.7}>
+                  <Text style={s.searchBtnText}>Search</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Muscle group chips */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={s.chips}
+                style={s.chipsScroll}
+              >
+                {CATEGORIES.map(cat => (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[s.chip, activeCategory === cat.id && s.chipActive]}
+                    onPress={() => activeCategory === cat.id ? (setActiveCategory(null), setResults([])) : searchByCategory(cat)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[s.chipText, activeCategory === cat.id && s.chipTextActive]}>
+                      {cat.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              {loading && <ActivityIndicator color={ACCENT} style={s.loader} />}
+              {error   && <Text style={s.error}>{error}</Text>}
+
+              <FlatList
+                data={results}
+                keyExtractor={(_, i) => String(i)}
+                renderItem={({ item }) => (
+                  <TouchableOpacity style={s.result} onPress={() => handleAdd(item)} activeOpacity={0.7}>
+                    <Text style={s.resultName}>{item.name}</Text>
+                    <Text style={s.resultMeta}>{item.category} · {item.equipment}</Text>
+                  </TouchableOpacity>
+                )}
+                ItemSeparatorComponent={() => <View style={s.separator} />}
+                ListEmptyComponent={
+                  !loading && (query.length > 0 || activeCategory) ? (
+                    <Text style={s.noResults}>No results — try a different term</Text>
+                  ) : null
+                }
+              />
+            </>
+          ) : (
+            /* Custom exercise form */
+            <View style={s.customForm}>
+              <Text style={s.customHint}>Can't find it? Create your own exercise.</Text>
+
+              <View style={s.customField}>
+                <Text style={s.customLabel}>EXERCISE NAME *</Text>
+                <TextInput
+                  style={s.customInput}
+                  placeholder="e.g. Cable Face Pull"
+                  placeholderTextColor="#555555"
+                  value={customName}
+                  onChangeText={setCustomName}
+                  autoFocus
+                />
+              </View>
+
+              <View style={s.customField}>
+                <Text style={s.customLabel}>MUSCLE GROUP</Text>
+                <TextInput
+                  style={s.customInput}
+                  placeholder="e.g. Shoulders"
+                  placeholderTextColor="#555555"
+                  value={customCategory}
+                  onChangeText={setCustomCategory}
+                />
+              </View>
+
+              <View style={s.customField}>
+                <Text style={s.customLabel}>EQUIPMENT</Text>
+                <TextInput
+                  style={s.customInput}
+                  placeholder="e.g. Cable Machine"
+                  placeholderTextColor="#555555"
+                  value={customEquipment}
+                  onChangeText={setCustomEquipment}
+                />
+              </View>
+
               <TouchableOpacity
-                key={cat.id}
-                style={[s.chip, activeCategory === cat.id && s.chipActive]}
-                onPress={() => activeCategory === cat.id ? (setActiveCategory(null), setResults([])) : searchByCategory(cat)}
+                style={[s.customAddBtn, !customName.trim() && s.customAddBtnDisabled]}
+                onPress={handleAddCustom}
                 activeOpacity={0.7}
               >
-                <Text style={[s.chipText, activeCategory === cat.id && s.chipTextActive]}>
-                  {cat.label}
-                </Text>
+                <Text style={s.customAddBtnText}>Add Custom Exercise</Text>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          {loading && <ActivityIndicator color={ACCENT} style={s.loader} />}
-          {error   && <Text style={s.error}>{error}</Text>}
-
-          <FlatList
-            data={results}
-            keyExtractor={(_, i) => String(i)}
-            renderItem={({ item }) => (
-              <TouchableOpacity style={s.result} onPress={() => handleAdd(item)} activeOpacity={0.7}>
-                <Text style={s.resultName}>{item.name}</Text>
-                <Text style={s.resultMeta}>{item.category} · {item.equipment}</Text>
-              </TouchableOpacity>
-            )}
-            ItemSeparatorComponent={() => <View style={s.separator} />}
-            ListEmptyComponent={
-              !loading && (query.length > 0 || activeCategory) ? (
-                <Text style={s.noResults}>No results — try a different term</Text>
-              ) : null
-            }
-          />
+            </View>
+          )}
 
         </View>
       </View>
@@ -199,6 +290,34 @@ const s = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 11,
     color: '#666666',
+  },
+
+  modeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+  },
+  modeBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#242424',
+    alignItems: 'center',
+    backgroundColor: '#000000',
+  },
+  modeBtnActive: {
+    backgroundColor: '#ffffff',
+    borderColor: '#ffffff',
+  },
+  modeBtnText: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    color: '#666666',
+  },
+  modeBtnTextActive: {
+    color: '#000000',
+    fontWeight: '600',
   },
 
   searchRow: {
@@ -288,5 +407,48 @@ const s = StyleSheet.create({
     color: '#666666',
     textAlign: 'center',
     paddingVertical: 20,
+  },
+
+  // Custom form
+  customForm: { gap: 16 },
+  customHint: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    color: '#555555',
+    marginBottom: 4,
+  },
+  customField: { gap: 6 },
+  customLabel: {
+    fontFamily: 'monospace',
+    fontSize: 9,
+    color: '#666666',
+    letterSpacing: 0.8,
+  },
+  customInput: {
+    backgroundColor: '#000000',
+    borderWidth: 1,
+    borderColor: '#242424',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    color: '#ffffff',
+    fontFamily: 'monospace',
+    fontSize: 13,
+  },
+  customAddBtn: {
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  customAddBtnDisabled: {
+    backgroundColor: '#242424',
+  },
+  customAddBtnText: {
+    fontFamily: 'monospace',
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#000000',
   },
 });

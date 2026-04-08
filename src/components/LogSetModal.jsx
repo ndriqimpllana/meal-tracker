@@ -107,7 +107,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
             {/* Input row */}
             <View style={s.inputRow}>
               <View style={s.inputGroup}>
-                <Text style={s.inputLabel}>KG</Text>
+                <Text style={s.inputLabel}>LBS</Text>
                 <TextInput
                   style={s.input}
                   placeholder="0"
@@ -142,14 +142,14 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
               <>
                 <View style={s.setsHeader}>
                   <Text style={s.setsHeaderText}>SET</Text>
-                  <Text style={s.setsHeaderText}>KG</Text>
+                  <Text style={s.setsHeaderText}>LBS</Text>
                   <Text style={s.setsHeaderText}>REPS</Text>
                   <Text style={s.setsHeaderText}> </Text>
                 </View>
                 {sets.map((item, index) => (
                   <View key={index} style={s.setRow}>
                     <Text style={s.setNum}>{index + 1}</Text>
-                    <Text style={s.setValue}>{item.weight} kg</Text>
+                    <Text style={s.setValue}>{item.weight} lbs</Text>
                     <Text style={s.setValue}>{item.reps}</Text>
                     <TouchableOpacity onPress={() => onRemove(index)} activeOpacity={0.7}>
                       <Text style={s.removeBtn}>✕</Text>
@@ -159,6 +159,28 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
               </>
             )}
 
+            {/* Progress chart */}
+            {previousSessions?.length > 1 && (() => {
+              const chartData = [...previousSessions].reverse().slice(-8);
+              const maxW = Math.max(...chartData.map(s => s.maxWeight), 1);
+              return (
+                <View style={s.chart}>
+                  <Text style={s.chartLabel}>MAX WEIGHT TREND</Text>
+                  <View style={s.chartBars}>
+                    {chartData.map((sess, i) => (
+                      <View key={i} style={s.chartBarWrap}>
+                        <Text style={s.chartBarVal}>{sess.maxWeight}</Text>
+                        <View style={s.chartBarTrack}>
+                          <View style={[s.chartBar, { height: Math.max((sess.maxWeight / maxW) * 56, 4) }]} />
+                        </View>
+                        <Text style={s.chartBarDate}>{sess.date.slice(5)}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              );
+            })()}
+
             {/* Previous sessions */}
             {previousSessions?.length > 0 && (
               <View style={s.historySection}>
@@ -167,7 +189,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
                   <View key={i} style={s.historyRow}>
                     <Text style={s.historyDate}>{session.date}</Text>
                     <Text style={s.historyData}>
-                      {session.sets} sets · {session.maxWeight} kg max
+                      {session.sets} sets · {session.maxWeight} lbs max
                       {i === 0 && previousSessions.length > 1 && session.maxWeight > previousSessions[1].maxWeight
                         ? <Text style={s.historyPR}> ↑ PR</Text>
                         : null
@@ -393,6 +415,54 @@ const s = StyleSheet.create({
     fontSize: 11,
     color: '#444444',
     paddingLeft: 8,
+  },
+
+  chart: {
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#1e1e1e',
+    marginBottom: 4,
+  },
+  chartLabel: {
+    fontFamily: 'monospace',
+    fontSize: 9,
+    color: '#444444',
+    letterSpacing: 1,
+    marginBottom: 12,
+  },
+  chartBars: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 6,
+    height: 80,
+  },
+  chartBarWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 4,
+  },
+  chartBarVal: {
+    fontFamily: 'monospace',
+    fontSize: 8,
+    color: ACCENT,
+  },
+  chartBarTrack: {
+    width: '100%',
+    height: 56,
+    justifyContent: 'flex-end',
+  },
+  chartBar: {
+    width: '100%',
+    backgroundColor: ACCENT + '66',
+    borderRadius: 3,
+    minHeight: 4,
+  },
+  chartBarDate: {
+    fontFamily: 'monospace',
+    fontSize: 7,
+    color: '#444444',
   },
 
   historySection: {

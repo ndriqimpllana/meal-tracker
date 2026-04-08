@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Modal } from 'react-native';
 import { useWorkouts, useWorkoutLogs } from '../hooks/useWorkouts';
 import ExerciseSearchModal from '../components/ExerciseSearchModal';
 import LogSetModal from '../components/LogSetModal';
+import SessionSummaryModal from '../components/SessionSummaryModal';
 
 const ACCENT = '#4ade80';
 
@@ -19,14 +20,25 @@ const todayIndex = dayMap[new Date().getDay()];
 const defaultDay = TRAINING_DAYS.find(d => d.index === todayIndex) ?? TRAINING_DAYS[0];
 
 export default function TrainingScreen() {
-  const [activeDay, setActiveDay]     = useState(defaultDay.index);
+  const [activeDay, setActiveDay]         = useState(defaultDay.index);
   const [searchVisible, setSearchVisible] = useState(false);
-  const [selectedEx, setSelectedEx]   = useState(null);
-  const [plan, setPlan]               = useWorkouts();
-  const [logs, setLogs]               = useWorkoutLogs();
+  const [selectedEx, setSelectedEx]       = useState(null);
+  const [summaryVisible, setSummaryVisible] = useState(false);
+  const [copyVisible, setCopyVisible]     = useState(false);
+  const [plan, setPlan]                   = useWorkouts();
+  const [logs, setLogs]                   = useWorkoutLogs();
 
-  const today    = new Date().toISOString().split('T')[0];
+  const today     = new Date().toISOString().split('T')[0];
   const exercises = plan[activeDay] ?? [];
+
+  // Volume for today
+  const todayLog     = logs[today] ?? {};
+  const totalSetsToday  = exercises.reduce((sum, ex) => sum + (todayLog[ex.id]?.length ?? 0), 0);
+  const totalVolumeToday = exercises.reduce((sum, ex) => {
+    const sets = todayLog[ex.id] ?? [];
+    return sum + sets.reduce((s, set) => s + set.weight * set.reps, 0);
+  }, 0);
+  const hasLoggedToday = totalSetsToday > 0;
 
   const addExercise = (ex) => {
     setPlan(prev => ({
@@ -47,10 +59,22 @@ export default function TrainingScreen() {
               ...prev,
               [activeDay]: (prev[activeDay] ?? []).filter(e => e.id !== exId),
             }));
-          }
+          },
         },
       ]
     );
+  };
+
+  const copyPlanToDay = (targetDayIndex) => {
+    const currentExercises = plan[activeDay] ?? [];
+    const targetExercises  = plan[targetDayIndex] ?? [];
+    const existingIds = new Set(targetExercises.map(e => e.id));
+    const toAdd = currentExercises.filter(e => !existingIds.has(e.id));
+    setPlan(prev => ({
+      ...prev,
+      [targetDayIndex]: [...targetExercises, ...toAdd],
+    }));
+    setCopyVisible(false);
   };
 
   const getSets = (exId) => logs[today]?.[exId] ?? [];
@@ -63,19 +87,16 @@ export default function TrainingScreen() {
         if (!sets || sets.length === 0) return null;
         return {
           date,
-          sets: sets.length,
+          sets:      sets.length,
           maxWeight: Math.max(...sets.map(s => s.weight)),
         };
       })
       .filter(Boolean)
       .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, 5);
+      .slice(0, 8);
   };
 
-  const getLastSession = (exId) => {
-    const sessions = getPreviousSessions(exId);
-    return sessions[0] ?? null;
-  };
+  const getLastSession = (exId) => getPreviousSessions(exId)[0] ?? null;
 
   const addSet = (exId, set) => {
     setLogs(prev => ({
@@ -95,14 +116,34 @@ export default function TrainingScreen() {
     });
   };
 
+  const otherDays = TRAINING_DAYS.filter(d => d.index !== activeDay);
+
   return (
     <View style={s.root}>
       <ScrollView style={s.scroll} contentContainerStyle={s.content}>
 
         {/* Header */}
         <View style={s.header}>
-          <Text style={s.appLabel}>Training</Text>
-          <Text style={s.title}>Your workouts</Text>
+          <View style={s.headerTop}>
+            <View>
+              <Text style={s.appLabel}>Training</Text>
+              <Text style={s.title}>Your workouts</Text>
+            </View>
+            {exercises.length > 0 && (
+              <TouchableOpacity style={s.copyBtn} onPress={() => setCopyVisible(true)} activeOpacity={0.7}>
+                <Text style={s.copyBtnText}>Copy Plan</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          {hasLoggedToday && (
+            <View style={s.volumeRow}>
+              <Text style={s.volumeText}>
+                Today: <Text style={s.volumeAccent}>{totalVolumeToday.toLocaleString()} lbs</Text>
+                {'  ·  '}
+                <Text style={s.volumeAccent}>{totalSetsToday} sets</Text>
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Day selector */}
@@ -131,14 +172,14 @@ export default function TrainingScreen() {
             </View>
           ) : (
             exercises.map((ex, i) => {
-              const todaySets  = getSets(ex.id);
-              const lastSesh   = getLastSession(ex.id);
-              const hasLoggedToday = todaySets.length > 0;
+              const todaySets      = getSets(ex.id);
+              const lastSesh       = getLastSession(ex.id);
+              const hasLogged      = todaySets.length > 0;
 
               return (
                 <TouchableOpacity
                   key={i}
-                  style={[s.exCard, hasLoggedToday && s.exCardActive]}
+                  style={[s.exCard, hasLogged && s.exCardActive]}
                   onPress={() => setSelectedEx(ex)}
                   onLongPress={() => removeExercise(ex.id)}
                   activeOpacity={0.7}
@@ -149,22 +190,19 @@ export default function TrainingScreen() {
                       <Text style={s.exName}>{ex.name}</Text>
                       <Text style={s.exMeta}>{ex.category} · {ex.equipment}</Text>
                     </View>
-                    {hasLoggedToday && (
+                    {hasLogged && (
                       <View style={s.setsBadge}>
                         <Text style={s.setsBadgeText}>{todaySets.length}</Text>
                         <Text style={s.setsBadgeLabel}>sets</Text>
                       </View>
                     )}
                   </View>
-
                   <View style={s.exCardBottom}>
-                    {lastSesh ? (
-                      <Text style={s.lastSession}>
-                        Last: {lastSesh.sets} sets · {lastSesh.maxWeight} kg max · {lastSesh.date}
-                      </Text>
-                    ) : (
-                      <Text style={s.lastSession}>No previous session</Text>
-                    )}
+                    <Text style={s.lastSession}>
+                      {lastSesh
+                        ? `Last: ${lastSesh.sets} sets · ${lastSesh.maxWeight} lbs max · ${lastSesh.date}`
+                        : 'No previous session'}
+                    </Text>
                     <Text style={s.longPressHint}>Hold to remove</Text>
                   </View>
                 </TouchableOpacity>
@@ -175,10 +213,40 @@ export default function TrainingScreen() {
 
       </ScrollView>
 
-      {/* Add button */}
-      <TouchableOpacity style={s.addBtn} onPress={() => setSearchVisible(true)} activeOpacity={0.8}>
-        <Text style={s.addBtnText}>+ Add Exercise</Text>
-      </TouchableOpacity>
+      {/* Bottom buttons */}
+      <View style={s.bottomBtns}>
+        {hasLoggedToday && (
+          <TouchableOpacity style={s.finishBtn} onPress={() => setSummaryVisible(true)} activeOpacity={0.8}>
+            <Text style={s.finishBtnText}>Finish Workout</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity style={s.addBtn} onPress={() => setSearchVisible(true)} activeOpacity={0.8}>
+          <Text style={s.addBtnText}>+ Add Exercise</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Copy plan modal */}
+      <Modal visible={copyVisible} transparent animationType="fade">
+        <View style={s.copyOverlay}>
+          <View style={s.copyDialog}>
+            <Text style={s.copyTitle}>Copy to which day?</Text>
+            <Text style={s.copySubtitle}>
+              Copies {exercises.length} exercise{exercises.length !== 1 ? 's' : ''} from {TRAINING_DAYS.find(d => d.index === activeDay)?.name}
+            </Text>
+            <View style={s.copyDayList}>
+              {otherDays.map(d => (
+                <TouchableOpacity key={d.index} style={s.copyDayBtn} onPress={() => copyPlanToDay(d.index)} activeOpacity={0.7}>
+                  <Text style={s.copyDayText}>{d.name}</Text>
+                  <Text style={s.copyDayCount}>{(plan[d.index] ?? []).length} exercises</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity style={s.copyCancelBtn} onPress={() => setCopyVisible(false)} activeOpacity={0.7}>
+              <Text style={s.copyCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <ExerciseSearchModal
         visible={searchVisible}
@@ -195,6 +263,13 @@ export default function TrainingScreen() {
         onRemove={(i) => removeSet(selectedEx.id, i)}
         onClose={() => setSelectedEx(null)}
       />
+      <SessionSummaryModal
+        visible={summaryVisible}
+        onClose={() => setSummaryVisible(false)}
+        exercises={exercises}
+        logs={logs}
+        date={today}
+      />
     </View>
   );
 }
@@ -202,7 +277,7 @@ export default function TrainingScreen() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000000' },
   scroll: { flex: 1 },
-  content: { padding: 16, paddingBottom: 100 },
+  content: { padding: 16, paddingBottom: 120 },
 
   header: {
     paddingTop: 24,
@@ -210,6 +285,12 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#242424',
     marginBottom: 20,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
   },
   appLabel: {
     fontFamily: 'monospace',
@@ -223,6 +304,30 @@ const s = StyleSheet.create({
     fontSize: 22,
     fontWeight: '600',
     color: '#ffffff',
+  },
+  copyBtn: {
+    borderWidth: 1,
+    borderColor: '#242424',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
+    marginTop: 4,
+  },
+  copyBtnText: {
+    fontFamily: 'monospace',
+    fontSize: 10,
+    color: '#666666',
+    letterSpacing: 0.5,
+  },
+  volumeRow: { marginTop: 4 },
+  volumeText: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    color: '#555555',
+  },
+  volumeAccent: {
+    color: ACCENT,
+    fontWeight: '600',
   },
 
   dayRow: {
@@ -257,9 +362,7 @@ const s = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: ACCENT,
   },
-  todayDotActive: {
-    backgroundColor: '#000000',
-  },
+  todayDotActive: { backgroundColor: '#000000' },
 
   exerciseList: { gap: 10 },
   empty: {
@@ -344,11 +447,29 @@ const s = StyleSheet.create({
     color: '#333333',
   },
 
-  addBtn: {
+  bottomBtns: {
     position: 'absolute',
     bottom: 16,
     left: 16,
     right: 16,
+    gap: 8,
+  },
+  finishBtn: {
+    backgroundColor: '#0d1a0d',
+    borderWidth: 1,
+    borderColor: ACCENT + '55',
+    borderRadius: 10,
+    paddingVertical: 13,
+    alignItems: 'center',
+  },
+  finishBtnText: {
+    fontFamily: 'monospace',
+    fontSize: 12,
+    fontWeight: '600',
+    color: ACCENT,
+    letterSpacing: 0.5,
+  },
+  addBtn: {
     backgroundColor: '#ffffff',
     borderRadius: 10,
     paddingVertical: 14,
@@ -360,5 +481,66 @@ const s = StyleSheet.create({
     fontWeight: '600',
     color: '#000000',
     letterSpacing: 0.5,
+  },
+
+  // Copy modal
+  copyOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  copyDialog: {
+    width: 300,
+    backgroundColor: '#111111',
+    borderWidth: 1,
+    borderColor: '#242424',
+    borderRadius: 12,
+    padding: 20,
+  },
+  copyTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  copySubtitle: {
+    fontFamily: 'monospace',
+    fontSize: 10,
+    color: '#555555',
+    marginBottom: 16,
+  },
+  copyDayList: { gap: 8, marginBottom: 12 },
+  copyDayBtn: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#242424',
+    borderRadius: 8,
+    backgroundColor: '#0a0a0a',
+  },
+  copyDayText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  copyDayCount: {
+    fontFamily: 'monospace',
+    fontSize: 10,
+    color: '#555555',
+  },
+  copyCancelBtn: {
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#242424',
+    borderRadius: 8,
+  },
+  copyCancelText: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    color: '#666666',
   },
 });
