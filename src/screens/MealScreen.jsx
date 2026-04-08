@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, StatusBar, Modal,
+  ScrollView, Modal,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { DAYS, TOTAL_MEALS } from '../data/days';
 import { useStorage } from '../hooks/useStorage';
 import DayNav from '../components/DayNav';
@@ -39,8 +38,7 @@ export default function MealScreen() {
 
   return (
     <View style={s.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
-      <SafeAreaView style={s.safe}>
+      <View style={s.safe}>
         <ScrollView style={s.scroll} contentContainerStyle={s.content}>
 
           {/* ── Header ── */}
@@ -142,7 +140,7 @@ export default function MealScreen() {
             </View>
           </View>
         </Modal>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }
