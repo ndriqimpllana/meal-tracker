@@ -5,9 +5,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Ellipse, Circle, Rect, G, Text as SvgText } from 'react-native-svg';
+import Constants from 'expo-constants';
 
-// ─── ExerciseDB API key (RapidAPI) ────────────────────────────────────────────
-const EXERCISEDB_KEY  = '9c2c43bf88mshc914f77ec6a537cp138e83jsnd9af825efc8e';
+// ─── ExerciseDB API key — loaded from .env, never hardcoded ──────────────────
+const EXERCISEDB_KEY  = Constants.expoConfig?.extra?.exerciseDbKey ?? '';
 const EXERCISEDB_HOST = 'exercisedb.p.rapidapi.com';
 
 const ACCENT         = '#30d158';
