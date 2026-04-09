@@ -262,11 +262,13 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
   const [wgerInstr,     setWgerInstr]     = useState(null);
 
   // ExerciseDB data
-  const [exdbTarget,      setExdbTarget]      = useState(null);
-  const [exdbSecondary,   setExdbSecondary]   = useState([]);
-  const [exdbInstr,       setExdbInstr]       = useState([]);
-  const [gifUrl,          setGifUrl]          = useState(null);
-  const [gifLoading,      setGifLoading]      = useState(false);
+  const [exdbTarget,    setExdbTarget]    = useState(null);
+  const [exdbSecondary, setExdbSecondary] = useState([]);
+  const [exdbInstr,     setExdbInstr]     = useState([]);
+  const [exdbBodyPart,  setExdbBodyPart]  = useState(null);
+  const [exdbEquipment, setExdbEquipment] = useState(null);
+  const [gifUrl,        setGifUrl]        = useState(null);
+  const [gifLoading,    setGifLoading]    = useState(false);
 
   // Prefill weight/reps from last set
   useEffect(() => {
@@ -289,6 +291,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
     if (!visible || !exercise?.id) return;
     setWgerMuscles([]); setWgerSecondary([]); setWgerInstr(null);
     setExdbTarget(null); setExdbSecondary([]); setExdbInstr([]);
+    setExdbBodyPart(null); setExdbEquipment(null);
     setGifUrl(null); setGifLoading(false); setMediaTab('muscles');
 
     // ── wger.de: muscles + instructions (skip custom exercises)
@@ -306,26 +309,64 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
         .catch(() => {});
     }
 
-    // ── ExerciseDB: GIF + target muscles + instructions
-    const name = exercise.name.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
-    setGifLoading(true);
-    fetch(`https://exercisedb.p.rapidapi.com/exercises/name/${encodeURIComponent(name)}?limit=3`, {
-      headers: {
+    // ── ExerciseDB: multi-strategy name search ────────────────────────────────
+    if (EXERCISEDB_KEY) {
+      const STOPS = new Set(['on','with','using','the','a','an','and','or','in','at','to','of','for','by','as']);
+      const words = exercise.name
+        .toLowerCase()
+        .replace(/[^a-z0-9 ]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .split(' ')
+        .filter(w => w.length > 1 && !STOPS.has(w));
+
+      // Score how well an ExerciseDB result matches our search words
+      const score = (exName) =>
+        words.reduce((n, w) => n + (exName.toLowerCase().includes(w) ? 1 : 0), 0);
+
+      const pickBest = (results) =>
+        results.reduce((best, cur) => (score(cur.name) >= score(best.name) ? cur : best));
+
+      // Try progressively shorter search terms until we get results
+      const terms = [
+        words.join(' '),
+        words.slice(0, 3).join(' '),
+        words.slice(0, 2).join(' '),
+        words[0],
+      ].filter((v, i, a) => v && a.indexOf(v) === i);
+
+      const hdrs = {
         'X-RapidAPI-Key':  EXERCISEDB_KEY,
         'X-RapidAPI-Host': EXERCISEDB_HOST,
-      },
-    })
-      .then(r => r.json())
-      .then(data => {
-        const ex = Array.isArray(data) ? data[0] : null;
-        if (!ex) return;
-        if (ex.gifUrl)            setGifUrl(ex.gifUrl);
-        if (ex.target)            setExdbTarget(ex.target);
-        if (ex.secondaryMuscles)  setExdbSecondary(ex.secondaryMuscles ?? []);
-        if (ex.instructions?.length) setExdbInstr(ex.instructions);
-      })
-      .catch(() => {})
-      .finally(() => setGifLoading(false));
+      };
+
+      setGifLoading(true);
+      (async () => {
+        let found = null;
+        for (const term of terms) {
+          try {
+            const r    = await fetch(
+              `https://exercisedb.p.rapidapi.com/exercises/name/${encodeURIComponent(term)}?limit=10`,
+              { headers: hdrs }
+            );
+            const data = await r.json();
+            if (Array.isArray(data) && data.length > 0) {
+              found = pickBest(data);
+              break;
+            }
+          } catch { /* try next term */ }
+        }
+        if (found) {
+          if (found.gifUrl)              setGifUrl(found.gifUrl);
+          if (found.target)              setExdbTarget(found.target);
+          if (found.secondaryMuscles)    setExdbSecondary(found.secondaryMuscles ?? []);
+          if (found.instructions?.length) setExdbInstr(found.instructions);
+          if (found.bodyPart)            setExdbBodyPart(found.bodyPart);
+          if (found.equipment)           setExdbEquipment(found.equipment);
+        }
+        setGifLoading(false);
+      })();
+    }
   }, [visible, exercise?.id]);
 
   const handleAdd = () => {
@@ -335,17 +376,10 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
   };
 
   const fmtTimer = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const cap = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 
-  // Resolved instructions — prefer ExerciseDB array, fall back to wger.de text
-  const hasInstr  = exdbInstr.length > 0 || !!wgerInstr;
-  const hasDemo   = !!gifUrl;
-
-  // Muscle name chips data
-  const primaryChips   = exdbTarget ? [exdbTarget, ...wgerMuscles.map(m => m.name_en)]
-    .filter((v, i, a) => a.indexOf(v) === i) : wgerMuscles.map(m => m.name_en);
-  const secondaryChips = exdbSecondary.length
-    ? [...exdbSecondary, ...wgerSecondary.map(m => m.name_en)].filter((v, i, a) => a.indexOf(v) === i)
-    : wgerSecondary.map(m => m.name_en);
+  const hasInstr = exdbInstr.length > 0 || !!wgerInstr;
+  const hasDemo  = !!gifUrl;
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false}>
@@ -407,20 +441,70 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
                   exdbSecondary={exdbSecondary}
                   category={exercise?.category}
                 />
-                {(primaryChips.length > 0 || secondaryChips.length > 0) && (
-                  <View style={s.chipsWrap}>
-                    {primaryChips.map((name, i) => (
-                      <View key={i} style={[s.chip, s.chipPri]}>
-                        <Text style={[s.chipTxt, s.chipTxtPri]}>{name}</Text>
+
+                {/* Primary muscle hero card */}
+                {exdbTarget && (
+                  <View style={s.muscleHero}>
+                    <View style={[s.muscleHeroIcon, { backgroundColor: PRIMARY_COLOR + '18' }]}>
+                      <Text style={s.muscleHeroEmoji}>🎯</Text>
+                    </View>
+                    <View style={s.muscleHeroBody}>
+                      <Text style={s.muscleHeroLabel}>PRIMARY MUSCLE</Text>
+                      <Text style={s.muscleHeroName}>{cap(exdbTarget)}</Text>
+                      {exdbBodyPart && (
+                        <Text style={s.muscleHeroSub}>{cap(exdbBodyPart)}</Text>
+                      )}
+                    </View>
+                    {exdbEquipment && (
+                      <View style={s.equipBadge}>
+                        <Text style={s.equipBadgeTxt}>{cap(exdbEquipment)}</Text>
                       </View>
-                    ))}
-                    {secondaryChips.map((name, i) => (
-                      <View key={i} style={[s.chip, s.chipSec]}>
-                        <Text style={[s.chipTxt, s.chipTxtSec]}>{name}</Text>
-                      </View>
-                    ))}
+                    )}
                   </View>
                 )}
+
+                {/* Secondary muscles */}
+                {exdbSecondary.length > 0 && (
+                  <View style={s.muscleSection}>
+                    <Text style={s.muscleSectionLabel}>SECONDARY MUSCLES</Text>
+                    <View style={s.chipsWrap}>
+                      {exdbSecondary.map((m, i) => (
+                        <View key={i} style={[s.chip, s.chipSec]}>
+                          <Text style={[s.chipTxt, s.chipTxtSec]}>{cap(m)}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {/* Anatomical detail from wger.de */}
+                {(wgerMuscles.length > 0 || wgerSecondary.length > 0) && (
+                  <View style={s.muscleSection}>
+                    <Text style={s.muscleSectionLabel}>ANATOMICAL DETAIL</Text>
+                    <View style={s.chipsWrap}>
+                      {wgerMuscles.map(m => (
+                        <View key={m.id} style={[s.chip, s.chipPri]}>
+                          <Text style={[s.chipTxt, s.chipTxtPri]}>{m.name_en}</Text>
+                        </View>
+                      ))}
+                      {wgerSecondary.map(m => (
+                        <View key={m.id} style={[s.chip, s.chipSec]}>
+                          <Text style={[s.chipTxt, s.chipTxtSec]}>{m.name_en}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {/* Loading state while ExerciseDB fetches */}
+                {gifLoading && !exdbTarget && (
+                  <View style={s.muscleLoading}>
+                    <ActivityIndicator size="small" color={ACCENT} />
+                    <Text style={s.muscleLoadingTxt}>Loading muscle data...</Text>
+                  </View>
+                )}
+
+                <View style={s.muscleBottom} />
               </>
             )}
 
@@ -610,8 +694,30 @@ const s = StyleSheet.create({
   tabText:      { fontSize: 12, fontWeight: '700', color: '#9ca3af' },
   tabTextActive:{ color: '#1a1a1e' },
 
+  // Muscle hero card
+  muscleHero: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    marginHorizontal: 16, marginBottom: 6,
+    backgroundColor: '#f9fafb', borderRadius: 14, padding: 14,
+  },
+  muscleHeroIcon:  { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  muscleHeroEmoji: { fontSize: 22 },
+  muscleHeroBody:  { flex: 1, gap: 2 },
+  muscleHeroLabel: { fontSize: 9, fontWeight: '800', color: '#9ca3af', letterSpacing: 1.5 },
+  muscleHeroName:  { fontSize: 18, fontWeight: '800', color: '#1a1a1e' },
+  muscleHeroSub:   { fontSize: 11, fontWeight: '500', color: '#9ca3af' },
+  equipBadge:      { backgroundColor: '#f3f4f6', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5 },
+  equipBadgeTxt:   { fontSize: 11, fontWeight: '700', color: '#6b7280' },
+
+  // Muscle sections
+  muscleSection:      { marginHorizontal: 16, marginBottom: 10 },
+  muscleSectionLabel: { fontSize: 9, fontWeight: '800', color: '#9ca3af', letterSpacing: 1.5, marginBottom: 8 },
+  muscleLoading:      { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingBottom: 12 },
+  muscleLoadingTxt:   { fontSize: 12, fontWeight: '500', color: '#9ca3af' },
+  muscleBottom:       { height: 8 },
+
   // Muscle chips
-  chipsWrap:   { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: 16, paddingBottom: 16 },
+  chipsWrap:   { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip:        { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, borderWidth: 1.5 },
   chipPri:     { backgroundColor: '#fee2e2', borderColor: '#fca5a5' },
   chipSec:     { backgroundColor: '#fffbeb', borderColor: '#fcd34d' },
