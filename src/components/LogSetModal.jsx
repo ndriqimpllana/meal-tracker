@@ -4,273 +4,29 @@ import {
   StyleSheet, Modal, ScrollView, Image, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Ellipse, Circle, Rect, G, Text as SvgText } from 'react-native-svg';
 import Constants from 'expo-constants';
 
-// ─── ExerciseDB API key — loaded from .env, never hardcoded ──────────────────
 const EXERCISEDB_KEY  = Constants.expoConfig?.extra?.exerciseDbKey ?? '';
 const EXERCISEDB_HOST = 'exercisedb.p.rapidapi.com';
+const ACCENT          = '#30d158';
 
-const ACCENT         = '#30d158';
-const PRIMARY_COLOR  = '#ef4444';   // red   — primary muscles
-const SECOND_COLOR   = '#f59e0b';   // amber — secondary muscles
-const BODY_COLOR     = '#d1d5db';   // gray  — body silhouette
-const ZONE_INACTIVE  = '#e5e7eb';   // light — inactive zone tint
-
-// ─── SVG zone definitions (90×220 viewBox, front view) ───────────────────────
-const FRONT_ZONES = {
-  deltoidL: { cx: 19, cy: 54, rx: 11, ry: 9  },
-  deltoidR: { cx: 71, cy: 54, rx: 11, ry: 9  },
-  chest:    { cx: 45, cy: 63, rx: 20, ry: 15 },
-  bicepL:   { cx: 15, cy: 80, rx:  7, ry: 19 },
-  bicepR:   { cx: 75, cy: 80, rx:  7, ry: 19 },
-  forearmL: { cx: 11, cy:113, rx:  6, ry: 14 },
-  forearmR: { cx: 79, cy:113, rx:  6, ry: 14 },
-  abs:      { cx: 45, cy:100, rx: 13, ry: 20 },
-  oblL:     { cx: 27, cy:104, rx:  7, ry: 17 },
-  oblR:     { cx: 63, cy:104, rx:  7, ry: 17 },
-  quadL:    { cx: 35, cy:160, rx: 12, ry: 25 },
-  quadR:    { cx: 55, cy:160, rx: 12, ry: 25 },
-  calfL:    { cx: 35, cy:202, rx:  8, ry: 16 },
-  calfR:    { cx: 55, cy:202, rx:  8, ry: 16 },
+const DIFF_COLORS = {
+  beginner:     { bg: '#f0fdf4', border: '#86efac', text: '#16a34a' },
+  intermediate: { bg: '#fffbeb', border: '#fcd34d', text: '#92400e' },
+  advanced:     { bg: '#fef2f2', border: '#fca5a5', text: '#dc2626' },
 };
 
-// ─── SVG zone definitions (back view) ────────────────────────────────────────
-const BACK_ZONES = {
-  trapsL:    { cx: 35, cy: 52, rx: 10, ry: 13 },
-  trapsR:    { cx: 55, cy: 52, rx: 10, ry: 13 },
-  latL:      { cx: 27, cy: 85, rx: 13, ry: 25 },
-  latR:      { cx: 63, cy: 85, rx: 13, ry: 25 },
-  midBackL:  { cx: 38, cy: 97, rx:  8, ry: 10 },
-  midBackR:  { cx: 52, cy: 97, rx:  8, ry: 10 },
-  lowerBack: { cx: 45, cy:115, rx: 12, ry: 10 },
-  gluteL:    { cx: 37, cy:134, rx: 13, ry: 14 },
-  gluteR:    { cx: 53, cy:134, rx: 13, ry: 14 },
-  tricepL:   { cx: 15, cy: 82, rx:  7, ry: 19 },
-  tricepR:   { cx: 75, cy: 82, rx:  7, ry: 19 },
-  hamL:      { cx: 35, cy:162, rx: 12, ry: 25 },
-  hamR:      { cx: 55, cy:162, rx: 12, ry: 25 },
-  calfBL:    { cx: 35, cy:204, rx:  8, ry: 16 },
-  calfBR:    { cx: 55, cy:204, rx:  8, ry: 16 },
-};
-
-// ─── wger.de muscle name → zones ─────────────────────────────────────────────
-const WGER_ZONES = {
-  'anterior deltoid':                  { f: ['deltoidL','deltoidR'] },
-  'deltoid':                           { f: ['deltoidL','deltoidR'] },
-  'biceps brachii':                    { f: ['bicepL','bicepR'] },
-  'brachialis':                        { f: ['bicepL','bicepR'] },
-  'brachioradialis':                   { f: ['forearmL','forearmR'] },
-  'pronator teres':                    { f: ['forearmL','forearmR'] },
-  'triceps brachii':                   { b: ['tricepL','tricepR'] },
-  'biceps femoris':                    { b: ['hamL','hamR'] },
-  'semimembranosus':                   { b: ['hamL','hamR'] },
-  'semitendinosus':                    { b: ['hamL','hamR'] },
-  'soleus':                            { b: ['calfBL','calfBR'] },
-  'gastrocnemius':                     { f: ['calfL','calfR'], b: ['calfBL','calfBR'] },
-  'tibialis anterior':                 { f: ['calfL','calfR'] },
-  'rectus abdominis':                  { f: ['abs'] },
-  'latissimus dorsi':                  { b: ['latL','latR'] },
-  'gluteus maximus':                   { b: ['gluteL','gluteR'] },
-  'gluteus medius':                    { b: ['gluteL','gluteR'] },
-  'pectoralis major':                  { f: ['chest'] },
-  'pectoralis major, clavicular part': { f: ['chest'] },
-  'pectoralis major, sternal part':    { f: ['chest'] },
-  'serratus anterior':                 { f: ['oblL','oblR'] },
-  'trapezius':                         { b: ['trapsL','trapsR'] },
-  'trapezius, middle fiber':           { b: ['trapsL','trapsR'] },
-  'quadriceps femoris':                { f: ['quadL','quadR'] },
-  'obliquus internus abdominis':       { f: ['oblL','oblR'] },
-  'obliquus externus abdominis':       { f: ['oblL','oblR'] },
-  'supraspinatus':                     { b: ['trapsL','trapsR'] },
-  'infraspinatus':                     { b: ['trapsL','trapsR'] },
-  'teres minor':                       { b: ['trapsL','trapsR'] },
-  'teres major':                       { b: ['latL','latR'] },
-  'rhomboids':                         { b: ['midBackL','midBackR'] },
-  'iliopsoas':                         { f: ['quadL','quadR'] },
-  'erector spinae':                    { b: ['lowerBack','midBackL','midBackR'] },
-};
-
-// ─── ExerciseDB muscle name → zones ──────────────────────────────────────────
-const EXDB_ZONES = {
-  'chest':             { f: ['chest'] },
-  'pectorals':         { f: ['chest'] },
-  'biceps':            { f: ['bicepL','bicepR'] },
-  'triceps':           { b: ['tricepL','tricepR'] },
-  'lats':              { b: ['latL','latR'] },
-  'upper back':        { b: ['trapsL','trapsR','midBackL','midBackR'] },
-  'middle back':       { b: ['midBackL','midBackR'] },
-  'lower back':        { b: ['lowerBack'] },
-  'traps':             { b: ['trapsL','trapsR'] },
-  'spine':             { b: ['lowerBack'] },
-  'shoulders':         { f: ['deltoidL','deltoidR'] },
-  'delts':             { f: ['deltoidL','deltoidR'] },
-  'abs':               { f: ['abs'] },
-  'abdominals':        { f: ['abs'] },
-  'obliques':          { f: ['oblL','oblR'] },
-  'serratus anterior': { f: ['oblL','oblR'] },
-  'glutes':            { b: ['gluteL','gluteR'] },
-  'quads':             { f: ['quadL','quadR'] },
-  'quadriceps':        { f: ['quadL','quadR'] },
-  'hamstrings':        { b: ['hamL','hamR'] },
-  'calves':            { f: ['calfL','calfR'], b: ['calfBL','calfBR'] },
-  'forearms':          { f: ['forearmL','forearmR'] },
-  'adductors':         { f: ['quadL','quadR'] },
-  'abductors':         { f: ['quadL','quadR'] },
-};
-
-// ─── Category fallback ────────────────────────────────────────────────────────
-const CAT_ZONES = {
-  'Arms':      { f: ['bicepL','bicepR','forearmL','forearmR'], b: ['tricepL','tricepR'] },
-  'Chest':     { f: ['chest','deltoidL','deltoidR'] },
-  'Back':      { b: ['latL','latR','trapsL','trapsR','midBackL','midBackR'] },
-  'Shoulders': { f: ['deltoidL','deltoidR'], b: ['trapsL','trapsR'] },
-  'Legs':      { f: ['quadL','quadR'], b: ['hamL','hamR','gluteL','gluteR'] },
-  'Abs':       { f: ['abs','oblL','oblR'] },
-  'Calves':    { f: ['calfL','calfR'], b: ['calfBL','calfBR'] },
-};
-
-function buildZones(wgerMuscles, wgerSecondary, exdbTarget, exdbSecondary, category) {
-  const active = new Set();
-  const sec    = new Set();
-
-  const addZone = (zoneName, target) => {
-    if (!zoneName) return;
-    const z = EXDB_ZONES[zoneName.toLowerCase()] ?? WGER_ZONES[zoneName.toLowerCase()];
-    if (z) {
-      (z.f ?? []).forEach(k => target.add('f_' + k));
-      (z.b ?? []).forEach(k => target.add('b_' + k));
-    }
-  };
-
-  // ExerciseDB data
-  if (exdbTarget)   addZone(exdbTarget, active);
-  if (exdbSecondary?.length) exdbSecondary.forEach(m => addZone(m, sec));
-
-  // wger.de supplements ExerciseDB
-  (wgerMuscles   ?? []).forEach(m => addZone(m.name_en, active));
-  (wgerSecondary ?? []).forEach(m => addZone(m.name_en, sec));
-
-  // Category fallback
-  if (!active.size && !sec.size) {
-    const cat = CAT_ZONES[category] ?? {};
-    (cat.f ?? []).forEach(k => active.add('f_' + k));
-    (cat.b ?? []).forEach(k => active.add('b_' + k));
-  }
-
-  return { active, sec };
-}
-
-// ─── SVG body side ────────────────────────────────────────────────────────────
-function BodySide({ zones, prefix, active, sec, offset }) {
-  const zFill = (key) => {
-    if (active.has(prefix + key)) return PRIMARY_COLOR;
-    if (sec.has(prefix + key))    return SECOND_COLOR;
-    return ZONE_INACTIVE;
-  };
-  const zOpacity = (key) => {
-    if (active.has(prefix + key)) return 0.88;
-    if (sec.has(prefix + key))    return 0.58;
-    return 0.28;
-  };
-
-  return (
-    <G transform={`translate(${offset}, 0)`}>
-      {/* Body silhouette */}
-      <Circle  cx={45}  cy={14}  r={13}  fill={BODY_COLOR} />
-      <Rect    x={41}   y={25}   width={8}  height={8}   rx={3}  fill={BODY_COLOR} />
-      <Ellipse cx={45}  cy={68}  rx={24}  ry={30}  fill={BODY_COLOR} />
-      <Ellipse cx={45}  cy={104} rx={18}  ry={18}  fill={BODY_COLOR} />
-      <Ellipse cx={45}  cy={124} rx={21}  ry={10}  fill={BODY_COLOR} />
-      <Ellipse cx={16}  cy={80}  rx={9}   ry={22}  fill={BODY_COLOR} />
-      <Ellipse cx={74}  cy={80}  rx={9}   ry={22}  fill={BODY_COLOR} />
-      <Ellipse cx={12}  cy={114} rx={7}   ry={18}  fill={BODY_COLOR} />
-      <Ellipse cx={78}  cy={114} rx={7}   ry={18}  fill={BODY_COLOR} />
-      <Ellipse cx={35}  cy={158} rx={13}  ry={28}  fill={BODY_COLOR} />
-      <Ellipse cx={55}  cy={158} rx={13}  ry={28}  fill={BODY_COLOR} />
-      <Ellipse cx={35}  cy={202} rx={9}   ry={18}  fill={BODY_COLOR} />
-      <Ellipse cx={55}  cy={202} rx={9}   ry={18}  fill={BODY_COLOR} />
-      {/* Muscle zones */}
-      {Object.entries(zones).map(([key, { cx, cy, rx, ry }]) => (
-        <Ellipse
-          key={key}
-          cx={cx} cy={cy} rx={rx} ry={ry}
-          fill={zFill(key)}
-          opacity={zOpacity(key)}
-        />
-      ))}
-    </G>
-  );
-}
-
-// ─── Muscle diagram component ─────────────────────────────────────────────────
-function MuscleDiagram({ wgerMuscles, wgerSecondary, exdbTarget, exdbSecondary, category }) {
-  const { active, sec } = buildZones(wgerMuscles, wgerSecondary, exdbTarget, exdbSecondary, category);
-
-  return (
-    <View style={dg.wrap}>
-      <Svg width="100%" height={232} viewBox="0 0 210 232" preserveAspectRatio="xMidYMid meet">
-        {/* Front */}
-        <BodySide zones={FRONT_ZONES} prefix="f_" active={active} sec={sec} offset={0} />
-        {/* Back */}
-        <BodySide zones={BACK_ZONES}  prefix="b_" active={active} sec={sec} offset={110} />
-        {/* Divider */}
-        <Rect x={102} y={8} width={1} height={208} fill="#e5e7eb" />
-        {/* Labels */}
-        <SvgText x={45}  y={228} textAnchor="middle" fill="#9ca3af" fontSize="8" fontWeight="bold">FRONT</SvgText>
-        <SvgText x={155} y={228} textAnchor="middle" fill="#9ca3af" fontSize="8" fontWeight="bold">BACK</SvgText>
-      </Svg>
-      {/* Legend */}
-      {(active.size > 0 || sec.size > 0) && (
-        <View style={dg.legend}>
-          {active.size > 0 && (
-            <View style={dg.legendRow}>
-              <View style={[dg.dot, { backgroundColor: PRIMARY_COLOR }]} />
-              <Text style={dg.lgTxt}>Primary</Text>
-            </View>
-          )}
-          {sec.size > 0 && (
-            <View style={dg.legendRow}>
-              <View style={[dg.dot, { backgroundColor: SECOND_COLOR }]} />
-              <Text style={dg.lgTxt}>Secondary</Text>
-            </View>
-          )}
-        </View>
-      )}
-    </View>
-  );
-}
-
-const dg = StyleSheet.create({
-  wrap:      { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 },
-  legend:    { flexDirection: 'row', gap: 16, paddingTop: 6, paddingHorizontal: 4 },
-  legendRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dot:       { width: 8, height: 8, borderRadius: 4 },
-  lgTxt:     { fontSize: 11, fontWeight: '600', color: '#6b7280' },
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
 export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, onClose, previousSessions }) {
-  const [weight, setWeight]         = useState('');
-  const [reps, setReps]             = useState('');
-  const [timer, setTimer]           = useState(null);
-  const [mediaTab, setMediaTab]     = useState('muscles');
+  const [weight, setWeight]   = useState('');
+  const [reps,   setReps]     = useState('');
+  const [timer,  setTimer]    = useState(null);
+  const [tab,    setTab]      = useState('overview');
 
-  // wger.de data
-  const [wgerMuscles,   setWgerMuscles]   = useState([]);
-  const [wgerSecondary, setWgerSecondary] = useState([]);
-  const [wgerInstr,     setWgerInstr]     = useState(null);
+  // ExerciseDB
+  const [exData,      setExData]      = useState(null);   // full found object
+  const [gifLoading,  setGifLoading]  = useState(false);
 
-  // ExerciseDB data
-  const [exdbTarget,    setExdbTarget]    = useState(null);
-  const [exdbSecondary, setExdbSecondary] = useState([]);
-  const [exdbInstr,     setExdbInstr]     = useState([]);
-  const [exdbBodyPart,  setExdbBodyPart]  = useState(null);
-  const [exdbEquipment, setExdbEquipment] = useState(null);
-  const [gifUrl,        setGifUrl]        = useState(null);
-  const [gifLoading,    setGifLoading]    = useState(false);
-
-  // Prefill weight/reps from last set
+  // Prefill from last set
   useEffect(() => {
     if (sets.length > 0) {
       const last = sets[sets.length - 1];
@@ -279,55 +35,30 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
     }
   }, [sets.length]);
 
-  // Rest timer countdown
+  // Rest timer
   useEffect(() => {
     if (!timer || timer <= 0) { if (timer === 0) setTimer(null); return; }
     const id = setInterval(() => setTimer(t => t - 1), 1000);
     return () => clearInterval(id);
   }, [timer]);
 
-  // Reset + fetch on open
+  // Fetch on open
   useEffect(() => {
     if (!visible || !exercise?.id) return;
-    setWgerMuscles([]); setWgerSecondary([]); setWgerInstr(null);
-    setExdbTarget(null); setExdbSecondary([]); setExdbInstr([]);
-    setExdbBodyPart(null); setExdbEquipment(null);
-    setGifUrl(null); setGifLoading(false); setMediaTab('muscles');
+    setExData(null); setGifLoading(false); setTab('overview');
 
-    // ── wger.de: muscles + instructions (skip custom exercises)
-    if (!String(exercise.id).startsWith('custom_')) {
-      fetch(`https://wger.de/api/v2/exerciseinfo/${exercise.id}/?format=json`)
-        .then(r => r.json())
-        .then(data => {
-          setWgerMuscles(data.muscles ?? []);
-          setWgerSecondary(data.muscles_secondary ?? []);
-          const en  = data.translations?.find(t => t.language === 2);
-          const raw = en?.description ?? '';
-          const clean = raw.replace(/<[^>]*>/g, '').trim();
-          if (clean) setWgerInstr(clean);
-        })
-        .catch(() => {});
-    }
+    const isCustom = String(exercise.id).startsWith('custom_');
 
-    // ── ExerciseDB: multi-strategy name search ────────────────────────────────
-    if (EXERCISEDB_KEY) {
+    // ExerciseDB only
+    if (!isCustom && EXERCISEDB_KEY) {
       const STOPS = new Set(['on','with','using','the','a','an','and','or','in','at','to','of','for','by','as']);
       const words = exercise.name
-        .toLowerCase()
-        .replace(/[^a-z0-9 ]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .split(' ')
-        .filter(w => w.length > 1 && !STOPS.has(w));
+        .toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim()
+        .split(' ').filter(w => w.length > 1 && !STOPS.has(w));
 
-      // Score how well an ExerciseDB result matches our search words
-      const score = (exName) =>
-        words.reduce((n, w) => n + (exName.toLowerCase().includes(w) ? 1 : 0), 0);
+      const score   = exName => words.reduce((n, w) => n + (exName.toLowerCase().includes(w) ? 1 : 0), 0);
+      const pickBest = list  => list.reduce((best, cur) => score(cur.name) >= score(best.name) ? cur : best);
 
-      const pickBest = (results) =>
-        results.reduce((best, cur) => (score(cur.name) >= score(best.name) ? cur : best));
-
-      // Try progressively shorter search terms until we get results
       const terms = [
         words.join(' '),
         words.slice(0, 3).join(' '),
@@ -335,10 +66,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
         words[0],
       ].filter((v, i, a) => v && a.indexOf(v) === i);
 
-      const hdrs = {
-        'X-RapidAPI-Key':  EXERCISEDB_KEY,
-        'X-RapidAPI-Host': EXERCISEDB_HOST,
-      };
+      const hdrs = { 'X-RapidAPI-Key': EXERCISEDB_KEY, 'X-RapidAPI-Host': EXERCISEDB_HOST };
 
       setGifLoading(true);
       (async () => {
@@ -350,20 +78,10 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
               { headers: hdrs }
             );
             const data = await r.json();
-            if (Array.isArray(data) && data.length > 0) {
-              found = pickBest(data);
-              break;
-            }
-          } catch { /* try next term */ }
+            if (Array.isArray(data) && data.length > 0) { found = pickBest(data); break; }
+          } catch { /* try next */ }
         }
-        if (found) {
-          if (found.gifUrl)              setGifUrl(found.gifUrl);
-          if (found.target)              setExdbTarget(found.target);
-          if (found.secondaryMuscles)    setExdbSecondary(found.secondaryMuscles ?? []);
-          if (found.instructions?.length) setExdbInstr(found.instructions);
-          if (found.bodyPart)            setExdbBodyPart(found.bodyPart);
-          if (found.equipment)           setExdbEquipment(found.equipment);
-        }
+        setExData(found ?? null);
         setGifLoading(false);
       })();
     }
@@ -375,20 +93,22 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
     setTimer(90);
   };
 
-  const fmtTimer = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-  const cap = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+  const fmtTimer = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const cap      = str => str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 
-  const hasInstr = exdbInstr.length > 0 || !!wgerInstr;
+  const isCustom   = String(exercise?.id ?? '').startsWith('custom_');
+  const diffStyle  = DIFF_COLORS[exData?.difficulty?.toLowerCase()] ?? DIFF_COLORS.beginner;
+  const instructions = exData?.instructions ?? [];
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false}>
       <SafeAreaView style={s.root}>
         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-          {/* ── Header ────────────────────────────────────────────────────── */}
+          {/* ── Header ──────────────────────────────────────────────────────── */}
           <View style={s.header}>
             <View style={s.headerLeft}>
-              <Text style={s.exName}>{exercise?.name}</Text>
+              <Text style={s.exName} numberOfLines={2}>{exercise?.name}</Text>
               <Text style={s.exMeta}>
                 {exercise?.category}
                 {exercise?.equipment && exercise.equipment !== 'None' ? ` · ${exercise.equipment}` : ''}
@@ -399,128 +119,164 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
             </TouchableOpacity>
           </View>
 
-          {/* ── Media card ────────────────────────────────────────────────── */}
-          <View style={s.mediaCard}>
+          {/* ── Info card ───────────────────────────────────────────────────── */}
+          <View style={s.infoCard}>
 
-            {/* Tabs */}
+            {/* Tab bar */}
             <View style={s.tabs}>
-              <TouchableOpacity
-                style={[s.tab, mediaTab === 'muscles' && s.tabActive]}
-                onPress={() => setMediaTab('muscles')} activeOpacity={0.75}
-              >
-                <Text style={[s.tabText, mediaTab === 'muscles' && s.tabTextActive]}>Muscles</Text>
-              </TouchableOpacity>
-
-              {hasInstr && (
+              {['overview', 'muscles', 'how-to', 'demo'].map(t => (
                 <TouchableOpacity
-                  style={[s.tab, mediaTab === 'howto' && s.tabActive]}
-                  onPress={() => setMediaTab('howto')} activeOpacity={0.75}
+                  key={t}
+                  style={[s.tab, tab === t && s.tabActive]}
+                  onPress={() => setTab(t)}
+                  activeOpacity={0.75}
                 >
-                  <Text style={[s.tabText, mediaTab === 'howto' && s.tabTextActive]}>How-To</Text>
+                  <Text style={[s.tabTxt, tab === t && s.tabTxtActive]}>
+                    {t === 'demo' ? '▶ Demo' : cap(t)}
+                  </Text>
                 </TouchableOpacity>
-              )}
-
-              {!String(exercise?.id ?? '').startsWith('custom_') && (
-                <TouchableOpacity
-                  style={[s.tab, mediaTab === 'demo' && s.tabActive]}
-                  onPress={() => setMediaTab('demo')} activeOpacity={0.75}
-                >
-                  <Text style={[s.tabText, mediaTab === 'demo' && s.tabTextActive]}>▶ Demo</Text>
-                </TouchableOpacity>
-              )}
+              ))}
             </View>
 
-            {/* ── Muscles tab ───────────────────────────────────────────── */}
-            {mediaTab === 'muscles' && (
-              <>
-                <MuscleDiagram
-                  wgerMuscles={wgerMuscles}
-                  wgerSecondary={wgerSecondary}
-                  exdbTarget={exdbTarget}
-                  exdbSecondary={exdbSecondary}
-                  category={exercise?.category}
-                />
+            {/* ── OVERVIEW tab ──────────────────────────────────────────────── */}
+            {tab === 'overview' && (
+              <View style={s.pane}>
+                {/* GIF preview at top */}
+                {gifLoading ? (
+                  <View style={s.gifThumb}>
+                    <ActivityIndicator color={ACCENT} />
+                  </View>
+                ) : exData?.gifUrl ? (
+                  <Image source={{ uri: exData.gifUrl }} style={s.gifThumb} resizeMode="cover" />
+                ) : null}
 
-                {/* Primary muscle hero card */}
-                {exdbTarget && (
-                  <View style={s.muscleHero}>
-                    <View style={[s.muscleHeroIcon, { backgroundColor: PRIMARY_COLOR + '18' }]}>
-                      <Text style={s.muscleHeroEmoji}>🎯</Text>
+                {/* Stat pills */}
+                <View style={s.statRow}>
+                  {exData?.bodyPart && (
+                    <View style={s.statPill}>
+                      <Text style={s.statPillLabel}>BODY PART</Text>
+                      <Text style={s.statPillVal}>{cap(exData.bodyPart)}</Text>
                     </View>
-                    <View style={s.muscleHeroBody}>
-                      <Text style={s.muscleHeroLabel}>PRIMARY MUSCLE</Text>
-                      <Text style={s.muscleHeroName}>{cap(exdbTarget)}</Text>
-                      {exdbBodyPart && (
-                        <Text style={s.muscleHeroSub}>{cap(exdbBodyPart)}</Text>
-                      )}
+                  )}
+                  {exData?.equipment && (
+                    <View style={s.statPill}>
+                      <Text style={s.statPillLabel}>EQUIPMENT</Text>
+                      <Text style={s.statPillVal}>{cap(exData.equipment)}</Text>
                     </View>
-                    {exdbEquipment && (
-                      <View style={s.equipBadge}>
-                        <Text style={s.equipBadgeTxt}>{cap(exdbEquipment)}</Text>
-                      </View>
-                    )}
+                  )}
+                  {exData?.category && (
+                    <View style={s.statPill}>
+                      <Text style={s.statPillLabel}>TYPE</Text>
+                      <Text style={s.statPillVal}>{cap(exData.category)}</Text>
+                    </View>
+                  )}
+                  {exData?.difficulty && (
+                    <View style={[s.statPill, { backgroundColor: diffStyle.bg, borderColor: diffStyle.border }]}>
+                      <Text style={s.statPillLabel}>LEVEL</Text>
+                      <Text style={[s.statPillVal, { color: diffStyle.text }]}>{cap(exData.difficulty)}</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Description */}
+                {exData?.description ? (
+                  <View style={s.descBox}>
+                    <Text style={s.descText}>{exData.description}</Text>
+                  </View>
+                ) : !gifLoading && (
+                  <View style={s.descBox}>
+                    <Text style={s.descText}>
+                      {exercise?.category ? `${exercise.category} exercise` : 'Tap How-To for instructions.'}
+                    </Text>
                   </View>
                 )}
 
-                {/* Secondary muscles */}
-                {exdbSecondary.length > 0 && (
-                  <View style={s.muscleSection}>
-                    <Text style={s.muscleSectionLabel}>SECONDARY MUSCLES</Text>
-                    <View style={s.chipsWrap}>
-                      {exdbSecondary.map((m, i) => (
-                        <View key={i} style={[s.chip, s.chipSec]}>
-                          <Text style={[s.chipTxt, s.chipTxtSec]}>{cap(m)}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                )}
-
-                {/* Anatomical detail from wger.de — only show names not already shown above */}
-                {(() => {
-                  const shown = new Set([
-                    ...(exdbTarget ? [exdbTarget.toLowerCase()] : []),
-                    ...exdbSecondary.map(m => m.toLowerCase()),
-                  ]);
-                  const priDetail = wgerMuscles.filter(m => m.name_en?.trim() && !shown.has(m.name_en.toLowerCase()));
-                  const secDetail = wgerSecondary.filter(m => m.name_en?.trim() && !shown.has(m.name_en.toLowerCase()));
-                  if (!priDetail.length && !secDetail.length) return null;
-                  return (
-                    <View style={s.muscleSection}>
-                      <Text style={s.muscleSectionLabel}>ANATOMICAL DETAIL</Text>
-                      <View style={s.chipsWrap}>
-                        {priDetail.map(m => (
-                          <View key={m.id} style={[s.chip, s.chipPri]}>
-                            <Text style={[s.chipTxt, s.chipTxtPri]}>{m.name_en}</Text>
-                          </View>
-                        ))}
-                        {secDetail.map(m => (
-                          <View key={m.id} style={[s.chip, s.chipSec]}>
-                            <Text style={[s.chipTxt, s.chipTxtSec]}>{m.name_en}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
-                  );
-                })()}
-
-                {/* Loading state while ExerciseDB fetches */}
-                {gifLoading && !exdbTarget && (
-                  <View style={s.muscleLoading}>
+                {gifLoading && !exData && (
+                  <View style={s.loadingRow}>
                     <ActivityIndicator size="small" color={ACCENT} />
-                    <Text style={s.muscleLoadingTxt}>Loading muscle data...</Text>
+                    <Text style={s.loadingTxt}>Loading exercise data...</Text>
                   </View>
                 )}
-
-                <View style={s.muscleBottom} />
-              </>
+              </View>
             )}
 
-            {/* ── How-To tab ────────────────────────────────────────────── */}
-            {mediaTab === 'howto' && (
-              <View style={s.howtoPane}>
-                {exdbInstr.length > 0 ? (
-                  exdbInstr.map((step, i) => (
+            {/* ── MUSCLES tab ───────────────────────────────────────────────── */}
+            {tab === 'muscles' && (
+              <View style={s.pane}>
+                {/* Primary target hero */}
+                {(exData?.target || exercise?.category) && (
+                  <View style={s.muscleHero}>
+                    <View style={s.muscleHeroLeft}>
+                      <View style={s.targetDot} />
+                      <View>
+                        <Text style={s.muscleHeroLabel}>PRIMARY TARGET</Text>
+                        <Text style={s.muscleHeroName}>{cap(exData?.target ?? exercise?.category)}</Text>
+                      </View>
+                    </View>
+                    <View style={[s.primBadge, { backgroundColor: '#fee2e2', borderColor: '#fca5a5' }]}>
+                      <Text style={[s.primBadgeTxt, { color: '#dc2626' }]}>Primary</Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* Secondary muscles list */}
+                {exData?.secondaryMuscles?.length > 0 && (
+                  <>
+                    <View style={s.divider} />
+                    <Text style={s.sectionLabel}>SECONDARY MUSCLES</Text>
+                    {exData.secondaryMuscles.map((m, i) => (
+                      <View key={i} style={s.muscleRow}>
+                        <View style={s.secDot} />
+                        <Text style={s.muscleRowTxt}>{cap(m)}</Text>
+                        <View style={[s.primBadge, { backgroundColor: '#fffbeb', borderColor: '#fcd34d' }]}>
+                          <Text style={[s.primBadgeTxt, { color: '#92400e' }]}>Secondary</Text>
+                        </View>
+                      </View>
+                    ))}
+                  </>
+                )}
+
+                {/* Body part / equipment info */}
+                {exData && (
+                  <>
+                    <View style={s.divider} />
+                    <View style={s.infoGrid}>
+                      {exData.bodyPart && (
+                        <View style={s.infoGridCell}>
+                          <Text style={s.infoGridLabel}>BODY PART</Text>
+                          <Text style={s.infoGridVal}>{cap(exData.bodyPart)}</Text>
+                        </View>
+                      )}
+                      {exData.equipment && (
+                        <View style={s.infoGridCell}>
+                          <Text style={s.infoGridLabel}>EQUIPMENT</Text>
+                          <Text style={s.infoGridVal}>{cap(exData.equipment)}</Text>
+                        </View>
+                      )}
+                      {exData.difficulty && (
+                        <View style={s.infoGridCell}>
+                          <Text style={s.infoGridLabel}>DIFFICULTY</Text>
+                          <Text style={[s.infoGridVal, { color: diffStyle.text }]}>{cap(exData.difficulty)}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </>
+                )}
+
+                {gifLoading && !exData && (
+                  <View style={s.loadingRow}>
+                    <ActivityIndicator size="small" color={ACCENT} />
+                    <Text style={s.loadingTxt}>Loading muscle data...</Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* ── HOW-TO tab ────────────────────────────────────────────────── */}
+            {tab === 'how-to' && (
+              <View style={s.pane}>
+                {instructions.length > 0 ? (
+                  instructions.map((step, i) => (
                     <View key={i} style={s.step}>
                       <View style={s.stepBadge}>
                         <Text style={s.stepBadgeTxt}>{i + 1}</Text>
@@ -528,39 +284,56 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
                       <Text style={s.stepTxt}>{step}</Text>
                     </View>
                   ))
-                ) : wgerInstr ? (
-                  <Text style={s.wgerInstr}>{wgerInstr}</Text>
-                ) : null}
+                ) : gifLoading ? (
+                  <View style={s.loadingRow}>
+                    <ActivityIndicator size="small" color={ACCENT} />
+                    <Text style={s.loadingTxt}>Loading instructions...</Text>
+                  </View>
+                ) : (
+                  <Text style={s.noDataTxt}>No instructions available</Text>
+                )}
               </View>
             )}
 
-            {/* ── Demo tab ──────────────────────────────────────────────── */}
-            {mediaTab === 'demo' && (
-              <View style={s.demoPane}>
+            {/* ── DEMO tab ──────────────────────────────────────────────────── */}
+            {tab === 'demo' && (
+              <View style={s.pane}>
                 {gifLoading ? (
-                  <View style={s.gifPlaceholder}>
+                  <View style={s.gifFull}>
                     <ActivityIndicator color={ACCENT} size="large" />
-                    <Text style={s.gifLoadingTxt}>Loading demo...</Text>
+                    <Text style={s.loadingTxt}>Loading demo GIF...</Text>
                   </View>
-                ) : gifUrl ? (
-                  <>
+                ) : exData?.gifUrl ? (
+                  <View>
                     <Image
-                      source={{ uri: gifUrl }}
-                      style={s.gif}
+                      source={{ uri: exData.gifUrl }}
+                      style={s.gifFull}
                       resizeMode="contain"
                     />
-                    <Text style={s.demoCaption}>Animated demo · ExerciseDB</Text>
-                  </>
+                    <View style={s.gifMeta}>
+                      <Text style={s.gifMetaName}>{cap(exData.name ?? exercise?.name)}</Text>
+                      {exData.difficulty && (
+                        <View style={[s.diffBadge, { backgroundColor: diffStyle.bg, borderColor: diffStyle.border }]}>
+                          <Text style={[s.diffBadgeTxt, { color: diffStyle.text }]}>{cap(exData.difficulty)}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={s.gifCaption}>Animated demo · ExerciseDB</Text>
+                  </View>
+                ) : isCustom ? (
+                  <View style={s.gifFull}>
+                    <Text style={s.noDataTxt}>No demo for custom exercises</Text>
+                  </View>
                 ) : (
-                  <View style={s.gifPlaceholder}>
-                    <Text style={s.gifMissingTxt}>No demo available for this exercise</Text>
+                  <View style={s.gifFull}>
+                    <Text style={s.noDataTxt}>No demo found — try renaming the exercise to match ExerciseDB</Text>
                   </View>
                 )}
               </View>
             )}
           </View>
 
-          {/* ── Rest timer ────────────────────────────────────────────────── */}
+          {/* ── Rest timer ──────────────────────────────────────────────────── */}
           {timer !== null && (
             <View style={s.timerBox}>
               <View style={s.timerLeft}>
@@ -578,28 +351,20 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
             </View>
           )}
 
-          {/* ── Log a set ────────────────────────────────────────────────── */}
+          {/* ── Log a set ───────────────────────────────────────────────────── */}
           <View style={s.logRow}>
             <View style={s.inputGroup}>
               <Text style={s.inputLabel}>LBS</Text>
               <TextInput
-                style={s.input}
-                placeholder="0"
-                placeholderTextColor="#d1d5db"
-                value={weight}
-                onChangeText={setWeight}
-                keyboardType="decimal-pad"
+                style={s.input} placeholder="0" placeholderTextColor="#d1d5db"
+                value={weight} onChangeText={setWeight} keyboardType="decimal-pad"
               />
             </View>
             <View style={s.inputGroup}>
               <Text style={s.inputLabel}>REPS</Text>
               <TextInput
-                style={s.input}
-                placeholder="0"
-                placeholderTextColor="#d1d5db"
-                value={reps}
-                onChangeText={setReps}
-                keyboardType="number-pad"
+                style={s.input} placeholder="0" placeholderTextColor="#d1d5db"
+                value={reps} onChangeText={setReps} keyboardType="number-pad"
               />
             </View>
             <TouchableOpacity style={s.addSetBtn} onPress={handleAdd} activeOpacity={0.8}>
@@ -607,7 +372,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
             </TouchableOpacity>
           </View>
 
-          {/* ── Today's sets ──────────────────────────────────────────────── */}
+          {/* ── Today's sets ────────────────────────────────────────────────── */}
           {sets.length === 0 ? (
             <View style={s.noSets}>
               <Text style={s.noSetsText}>No sets logged yet — add one above</Text>
@@ -632,7 +397,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
             </View>
           )}
 
-          {/* ── Progress chart ────────────────────────────────────────────── */}
+          {/* ── Progress chart ──────────────────────────────────────────────── */}
           {previousSessions?.length > 1 && (() => {
             const data = [...previousSessions].reverse().slice(-8);
             const maxW = Math.max(...data.map(ss => ss.maxWeight), 1);
@@ -654,7 +419,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
             );
           })()}
 
-          {/* ── Previous sessions ─────────────────────────────────────────── */}
+          {/* ── Previous sessions ───────────────────────────────────────────── */}
           {previousSessions?.length > 0 && (
             <View style={s.history}>
               <Text style={s.historyLabel}>PREVIOUS SESSIONS</Text>
@@ -685,73 +450,74 @@ const s = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16,
     borderBottomWidth: 1, borderBottomColor: '#e5e7eb', backgroundColor: '#f2f2f7',
   },
-  headerLeft:   { flex: 1, gap: 4 },
-  exName:       { fontSize: 20, fontWeight: '800', color: '#1a1a1e' },
+  headerLeft:   { flex: 1, gap: 4, paddingRight: 12 },
+  exName:       { fontSize: 20, fontWeight: '800', color: '#1a1a1e', lineHeight: 26 },
   exMeta:       { fontSize: 11, fontWeight: '500', color: '#9ca3af' },
-  closeBtn:     { width: 36, height: 36, borderRadius: 18, backgroundColor: '#1a1a1e', alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+  closeBtn:     { width: 36, height: 36, borderRadius: 18, backgroundColor: '#1a1a1e', alignItems: 'center', justifyContent: 'center', marginTop: 2, flexShrink: 0 },
   closeBtnText: { fontSize: 14, fontWeight: '800', color: '#ffffff' },
 
-  // Media card
-  mediaCard: {
+  // Card + tabs
+  infoCard: {
     backgroundColor: '#ffffff', margin: 16, borderRadius: 20, overflow: 'hidden',
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 14, elevation: 2,
   },
-  tabs:         { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  tab:          { flex: 1, paddingVertical: 13, alignItems: 'center' },
-  tabActive:    { borderBottomWidth: 2.5, borderBottomColor: ACCENT },
-  tabText:      { fontSize: 12, fontWeight: '700', color: '#9ca3af' },
-  tabTextActive:{ color: '#1a1a1e' },
+  tabs:       { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+  tab:        { flex: 1, paddingVertical: 12, alignItems: 'center' },
+  tabActive:  { borderBottomWidth: 2.5, borderBottomColor: ACCENT },
+  tabTxt:     { fontSize: 11, fontWeight: '700', color: '#9ca3af' },
+  tabTxtActive:{ fontSize: 11, fontWeight: '800', color: '#1a1a1e' },
 
-  // Muscle hero card
+  pane: { padding: 16, gap: 12 },
+
+  // Overview
+  gifThumb: {
+    width: '100%', height: 200, borderRadius: 14,
+    backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
+  },
+  statRow:       { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  statPill:      { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: '#f9fafb', borderWidth: 1.5, borderColor: '#e5e7eb', gap: 2 },
+  statPillLabel: { fontSize: 8, fontWeight: '800', color: '#9ca3af', letterSpacing: 1 },
+  statPillVal:   { fontSize: 13, fontWeight: '800', color: '#1a1a1e' },
+  descBox:       { backgroundColor: '#f9fafb', borderRadius: 14, padding: 14 },
+  descText:      { fontSize: 13, color: '#374151', lineHeight: 20 },
+  loadingRow:    { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  loadingTxt:    { fontSize: 12, fontWeight: '500', color: '#9ca3af' },
+
+  // Muscles
   muscleHero: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    marginHorizontal: 16, marginBottom: 6,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: '#f9fafb', borderRadius: 14, padding: 14,
   },
-  muscleHeroIcon:  { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  muscleHeroEmoji: { fontSize: 22 },
-  muscleHeroBody:  { flex: 1, gap: 2 },
-  muscleHeroLabel: { fontSize: 9, fontWeight: '800', color: '#9ca3af', letterSpacing: 1.5 },
-  muscleHeroName:  { fontSize: 18, fontWeight: '800', color: '#1a1a1e' },
-  muscleHeroSub:   { fontSize: 11, fontWeight: '500', color: '#9ca3af' },
-  equipBadge:      { backgroundColor: '#f3f4f6', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5 },
-  equipBadgeTxt:   { fontSize: 11, fontWeight: '700', color: '#6b7280' },
+  muscleHeroLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  targetDot:      { width: 14, height: 14, borderRadius: 7, backgroundColor: '#ef4444' },
+  muscleHeroLabel:{ fontSize: 9, fontWeight: '800', color: '#9ca3af', letterSpacing: 1.5 },
+  muscleHeroName: { fontSize: 18, fontWeight: '800', color: '#1a1a1e' },
+  primBadge:      { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, borderWidth: 1.5 },
+  primBadgeTxt:   { fontSize: 11, fontWeight: '700' },
+  divider:        { height: 1, backgroundColor: '#f3f4f6' },
+  sectionLabel:   { fontSize: 9, fontWeight: '800', color: '#9ca3af', letterSpacing: 1.5 },
+  muscleRow:      { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
+  secDot:         { width: 10, height: 10, borderRadius: 5, backgroundColor: '#f59e0b' },
+  muscleRowTxt:   { flex: 1, fontSize: 15, fontWeight: '700', color: '#1a1a1e' },
+  infoGrid:       { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  infoGridCell:   { flex: 1, minWidth: '28%', backgroundColor: '#f9fafb', borderRadius: 12, padding: 12, gap: 4 },
+  infoGridLabel:  { fontSize: 8, fontWeight: '800', color: '#9ca3af', letterSpacing: 1 },
+  infoGridVal:    { fontSize: 14, fontWeight: '800', color: '#1a1a1e' },
 
-  // Muscle sections
-  muscleSection:      { marginHorizontal: 16, marginBottom: 10 },
-  muscleSectionLabel: { fontSize: 9, fontWeight: '800', color: '#9ca3af', letterSpacing: 1.5, marginBottom: 8 },
-  muscleLoading:      { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingBottom: 12 },
-  muscleLoadingTxt:   { fontSize: 12, fontWeight: '500', color: '#9ca3af' },
-  muscleBottom:       { height: 8 },
+  // How-to
+  step:        { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  stepBadge:   { width: 26, height: 26, borderRadius: 13, backgroundColor: ACCENT, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
+  stepBadgeTxt:{ fontSize: 11, fontWeight: '800', color: '#ffffff' },
+  stepTxt:     { flex: 1, fontSize: 13, color: '#374151', lineHeight: 20 },
+  noDataTxt:   { fontSize: 12, fontWeight: '500', color: '#d1d5db', textAlign: 'center', paddingVertical: 20 },
 
-  // Muscle chips
-  chipsWrap:   { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip:        { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, borderWidth: 1.5 },
-  chipPri:     { backgroundColor: '#fee2e2', borderColor: '#fca5a5' },
-  chipSec:     { backgroundColor: '#fffbeb', borderColor: '#fcd34d' },
-  chipTxt:     { fontSize: 11, fontWeight: '700', textTransform: 'capitalize' },
-  chipTxtPri:  { color: '#ef4444' },
-  chipTxtSec:  { color: '#92400e' },
-
-  // How-To pane
-  howtoPane: { padding: 16, gap: 12 },
-  step:      { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
-  stepBadge: {
-    width: 24, height: 24, borderRadius: 12,
-    backgroundColor: ACCENT, alignItems: 'center', justifyContent: 'center',
-    marginTop: 1, flexShrink: 0,
-  },
-  stepBadgeTxt: { fontSize: 11, fontWeight: '800', color: '#ffffff' },
-  stepTxt:      { flex: 1, fontSize: 13, color: '#374151', lineHeight: 20 },
-  wgerInstr:    { fontSize: 13, color: '#374151', lineHeight: 20, padding: 16 },
-
-  // Demo pane
-  demoPane:       { padding: 16 },
-  gif:            { width: '100%', height: 240, borderRadius: 14, backgroundColor: '#f9fafb' },
-  gifPlaceholder: { height: 200, alignItems: 'center', justifyContent: 'center', gap: 10 },
-  gifLoadingTxt:  { fontSize: 12, fontWeight: '600', color: '#9ca3af' },
-  gifMissingTxt:  { fontSize: 12, fontWeight: '500', color: '#d1d5db' },
-  demoCaption:    { fontSize: 9, fontWeight: '600', color: '#d1d5db', textAlign: 'center', marginTop: 8, letterSpacing: 0.5 },
+  // Demo
+  gifFull:     { width: '100%', height: 260, borderRadius: 14, backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center' },
+  gifMeta:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },
+  gifMetaName: { fontSize: 14, fontWeight: '800', color: '#1a1a1e', flex: 1 },
+  diffBadge:   { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, borderWidth: 1.5, marginLeft: 8 },
+  diffBadgeTxt:{ fontSize: 11, fontWeight: '700' },
+  gifCaption:  { fontSize: 9, fontWeight: '600', color: '#d1d5db', marginTop: 6, letterSpacing: 0.5 },
 
   // Rest timer
   timerBox: {
