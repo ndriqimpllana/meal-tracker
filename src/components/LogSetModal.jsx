@@ -379,7 +379,6 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
   const cap = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 
   const hasInstr = exdbInstr.length > 0 || !!wgerInstr;
-  const hasDemo  = !!gifUrl;
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false}>
@@ -421,7 +420,7 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
                 </TouchableOpacity>
               )}
 
-              {(hasDemo || gifLoading) && (
+              {!String(exercise?.id ?? '').startsWith('custom_') && (
                 <TouchableOpacity
                   style={[s.tab, mediaTab === 'demo' && s.tabActive]}
                   onPress={() => setMediaTab('demo')} activeOpacity={0.75}
@@ -477,24 +476,33 @@ export default function LogSetModal({ visible, exercise, sets, onAdd, onRemove, 
                   </View>
                 )}
 
-                {/* Anatomical detail from wger.de */}
-                {(wgerMuscles.length > 0 || wgerSecondary.length > 0) && (
-                  <View style={s.muscleSection}>
-                    <Text style={s.muscleSectionLabel}>ANATOMICAL DETAIL</Text>
-                    <View style={s.chipsWrap}>
-                      {wgerMuscles.map(m => (
-                        <View key={m.id} style={[s.chip, s.chipPri]}>
-                          <Text style={[s.chipTxt, s.chipTxtPri]}>{m.name_en}</Text>
-                        </View>
-                      ))}
-                      {wgerSecondary.map(m => (
-                        <View key={m.id} style={[s.chip, s.chipSec]}>
-                          <Text style={[s.chipTxt, s.chipTxtSec]}>{m.name_en}</Text>
-                        </View>
-                      ))}
+                {/* Anatomical detail from wger.de — only show names not already shown above */}
+                {(() => {
+                  const shown = new Set([
+                    ...(exdbTarget ? [exdbTarget.toLowerCase()] : []),
+                    ...exdbSecondary.map(m => m.toLowerCase()),
+                  ]);
+                  const priDetail = wgerMuscles.filter(m => m.name_en?.trim() && !shown.has(m.name_en.toLowerCase()));
+                  const secDetail = wgerSecondary.filter(m => m.name_en?.trim() && !shown.has(m.name_en.toLowerCase()));
+                  if (!priDetail.length && !secDetail.length) return null;
+                  return (
+                    <View style={s.muscleSection}>
+                      <Text style={s.muscleSectionLabel}>ANATOMICAL DETAIL</Text>
+                      <View style={s.chipsWrap}>
+                        {priDetail.map(m => (
+                          <View key={m.id} style={[s.chip, s.chipPri]}>
+                            <Text style={[s.chipTxt, s.chipTxtPri]}>{m.name_en}</Text>
+                          </View>
+                        ))}
+                        {secDetail.map(m => (
+                          <View key={m.id} style={[s.chip, s.chipSec]}>
+                            <Text style={[s.chipTxt, s.chipTxtSec]}>{m.name_en}</Text>
+                          </View>
+                        ))}
+                      </View>
                     </View>
-                  </View>
-                )}
+                  );
+                })()}
 
                 {/* Loading state while ExerciseDB fetches */}
                 {gifLoading && !exdbTarget && (
